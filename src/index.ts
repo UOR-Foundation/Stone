@@ -1,7 +1,20 @@
 import { ConfigLoader, ConfigGenerator, StoneConfig } from './config';
 import { GitHubAuth, GitHubClient, IssueManager, LabelManager } from './github';
 import { StoneWorkflow } from './workflow';
-import { ClaudeFileGenerator } from './claude';
+import {
+  ClaudeFileGenerator,
+  ClaudeClient,
+  ContextProvider,
+  ResponseParser,
+  Role,
+  RoleManager,
+  RoleOrchestrator,
+  PMRole,
+  QARole,
+  FeatureRole,
+  AuditorRole,
+  ActionsRole
+} from './claude';
 import { Logger } from './utils/logger';
 
 /**
@@ -76,22 +89,27 @@ export async function processEvent(event: any): Promise<void> {
     // Create GitHub client
     const client = new GitHubClient(token, config);
     
+    // Create role orchestrator
+    const orchestrator = new RoleOrchestrator(token);
+    
     // Process based on event type
     if (event.action === 'labeled' && event.issue) {
       const label = event.label.name;
       const issueNumber = event.issue.number;
       
-      // Handle different labels
-      if (label === config.workflow.stoneLabel) {
-        // Process new Stone issue
-        const issueManager = new IssueManager(client, config);
-        await issueManager.processIssue(issueNumber);
-      } else if (label.startsWith('stone-')) {
-        // Process issue with Stone label
-        const workflow = new StoneWorkflow(client, config);
-        const workflowType = label.replace('stone-', '');
-        await workflow.runWorkflow(workflowType, issueNumber);
+      // Check if it's a Stone label
+      if (await orchestrator.isStoneLabel(label)) {
+        logger.info(`Processing issue #${issueNumber} with label: ${label}`);
+        
+        // Process issue with the role orchestrator
+        await orchestrator.processIssueWithLabel(issueNumber, label);
       }
+    } else if (event.action === 'created' && event.comment && event.issue) {
+      // Handle new comments (for future implementation)
+      logger.info(`New comment on issue #${event.issue.number}`);
+    } else if (event.action === 'opened' && event.pull_request) {
+      // Handle new pull requests (for future implementation)
+      logger.info(`New pull request #${event.pull_request.number}`);
     }
     
     logger.success('Event processed successfully!');
@@ -142,5 +160,18 @@ export async function runWorkflow(
   }
 }
 
-// Export core types
-export { StoneConfig };
+// Export core types and classes
+export { 
+  StoneConfig,
+  ClaudeClient,
+  ContextProvider,
+  ResponseParser,
+  Role,
+  RoleManager,
+  RoleOrchestrator,
+  PMRole,
+  QARole,
+  FeatureRole,
+  AuditorRole,
+  ActionsRole
+};

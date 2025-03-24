@@ -1,8 +1,8 @@
-import { Octokit } from 'octokit';
+const { Octokit } = require('octokit');
 import { StoneConfig } from '../config';
 
 export class GitHubClient {
-  public octokit: Octokit;
+  public octokit: any;
   private config: StoneConfig;
 
   constructor(token: string, config: StoneConfig) {
