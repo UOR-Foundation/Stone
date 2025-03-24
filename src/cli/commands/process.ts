@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { ConfigLoader } from '../../config';
-import { GitHubAuth, GitHubClient, IssueManager } from '../../github';
+import { GitHubAuth, GitHubClient } from '../../github';
+import { StoneWorkflow } from '../../workflow';
 import { Logger } from '../../utils/logger';
 
 // Logger instance
@@ -11,15 +12,17 @@ export function processCommand(program: Command): void {
     .command('process')
     .description('Process a Stone issue')
     .requiredOption('-i, --issue <number>', 'Issue number to process')
+    .option('-t, --type <type>', 'Workflow type to run (process, pm, qa, feature, audit, test, claude-auto)', 'process')
     .action(async (options) => {
       try {
         const issueNumber = parseInt(options.issue, 10);
+        const workflowType = options.type;
         
         if (isNaN(issueNumber) || issueNumber <= 0) {
           throw new Error('Invalid issue number');
         }
 
-        logger.info(`Processing issue #${issueNumber}...`);
+        logger.info(`Processing issue #${issueNumber} with workflow type: ${workflowType}...`);
 
         // Load configuration
         const configLoader = new ConfigLoader();
@@ -35,13 +38,14 @@ export function processCommand(program: Command): void {
 
         // Create GitHub client
         const client = new GitHubClient(token, config);
-        const issueManager = new IssueManager(client, config);
-
-        // Process the issue
-        const stage = await issueManager.processIssue(issueNumber);
+        
+        // Create workflow instance
+        const workflow = new StoneWorkflow(client, config);
+        
+        // Run the workflow
+        await workflow.runWorkflow(workflowType, issueNumber);
         
         logger.success(`Issue #${issueNumber} processed successfully!`);
-        logger.info(`Current stage: ${stage}`);
       } catch (error) {
         if (error instanceof Error) {
           logger.error(`Failed to process issue: ${error.message}`);

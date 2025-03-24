@@ -26,6 +26,12 @@ describe('Configuration Schema', () => {
         issueTemplateDirectory: '.github/ISSUE_TEMPLATE',
         stoneDirectory: '.github/stone',
       },
+      audit: {
+        minCodeCoverage: 80,
+        requiredReviewers: 1,
+        maxComplexity: 20,
+        qualityChecks: ['lint', 'types', 'tests']
+      },
       roles: {
         pm: {
           enabled: true,
@@ -78,6 +84,7 @@ describe('Configuration Schema', () => {
     // Check that defaults were applied
     expect(value.workflow).toBeDefined();
     expect(value.github).toBeDefined();
+    expect(value.audit).toBeDefined();
     expect(value.roles).toBeDefined();
   });
 

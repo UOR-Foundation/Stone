@@ -30,6 +30,12 @@ describe('ConfigLoader', () => {
       issueTemplateDirectory: '.github/ISSUE_TEMPLATE',
       stoneDirectory: '.github/stone',
     },
+    audit: {
+      minCodeCoverage: 80,
+      requiredReviewers: 1,
+      maxComplexity: 20,
+      qualityChecks: ['lint', 'types', 'tests']
+    },
     roles: {
       pm: {
         enabled: true,
