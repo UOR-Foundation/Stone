@@ -1,6 +1,6 @@
 # Stone - A Software Factory for GitHub
 
-Stone is a structured system for orchestrating GitHub-based development using Claude Code. It implements a software factory approach with specialized roles, each with defined responsibilities and boundaries.
+Stone is a structured system for orchestrating GitHub-based development using Claude Code. It implements a software factory approach with specialized roles, each with defined responsibilities and boundaries. Advanced features provide robust support for common workflow challenges.
 
 ## Features
 
