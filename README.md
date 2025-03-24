@@ -14,6 +14,46 @@ Stone helps manage large codebases by breaking down feature implementation into 
 - **Bounded Context**: Each role operates within appropriate context boundaries
 - **GitHub Native**: Uses GitHub issues, PRs, comments, and actions for all workflows
 
+## Phase 5: Advanced Features
+
+This release focuses on implementing the following advanced features:
+
+### 1. Merge Conflict Resolution
+
+Automates the detection and resolution of merge conflicts in pull requests using Git operations.
+
+- Detects conflicting files
+- Attempts automatic resolution
+- Updates PR status with results
+- Handles edge cases and failures gracefully
+
+### 2. User Feedback Handling
+
+Processes and routes feedback from pull request comments to appropriate teams.
+
+- Analyzes PR comments to extract actionable feedback
+- Determines feedback severity and affected areas
+- Creates and prioritizes issues from feedback
+- Routes issues to appropriate teams based on context
+
+### 3. Documentation Management
+
+Generates and maintains documentation from source code comments.
+
+- Extracts JSDoc comments to generate Markdown documentation
+- Verifies documentation against required elements
+- Creates documentation PRs with updates
+- Handles missing or incomplete documentation
+
+### 4. Error Recovery System
+
+Implements robust error handling and recovery for workflow failures.
+
+- Captures and persists error states
+- Implements graduated recovery strategies
+- Automatically retries failed operations when appropriate
+- Escalates to human team members when necessary
+
 ## Installation
 
 ```bash
