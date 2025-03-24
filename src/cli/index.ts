@@ -6,6 +6,7 @@ import { processCommand } from './commands/process';
 import { statusCommand } from './commands/status';
 import { runCommand } from './commands/run';
 import { resetCommand } from './commands/reset';
+import { actionsCommand } from './commands/actions';
 import { Logger } from '../utils/logger';
 
 const logger = new Logger();
@@ -24,6 +25,7 @@ processCommand(program);
 statusCommand(program);
 runCommand(program);
 resetCommand(program);
+actionsCommand(program);
 
 // Handle errors
 program.exitOverride();
