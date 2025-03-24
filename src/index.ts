@@ -16,6 +16,12 @@ import {
   ActionsRole
 } from './claude';
 import { Logger } from './utils/logger';
+import { 
+  GitHubActionsIntegration,
+  WorkflowGenerator,
+  WebhookHandler,
+  CIPipeline
+} from './github-actions';
 
 /**
  * Initialize Stone in a repository
@@ -173,5 +179,10 @@ export {
   QARole,
   FeatureRole,
   AuditorRole,
-  ActionsRole
+  ActionsRole,
+  // GitHub Actions exports
+  GitHubActionsIntegration,
+  WorkflowGenerator,
+  WebhookHandler,
+  CIPipeline
 };
