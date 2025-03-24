@@ -47,7 +47,7 @@ export class TestFramework {
     });
 
     // Find the Gherkin specification
-    const gherkinComment = comments.find(comment => 
+    const gherkinComment = comments.find((comment: { body?: string }) => 
       comment.body && comment.body.includes('## Gherkin Specification')
     );
 
@@ -98,13 +98,13 @@ export class TestFramework {
     
     // Extract keywords from the issue title to help determine the location
     const title = issue.title.toLowerCase();
-    const words = title.split(/\s+/).filter(word => word.length > 3);
+    const words = title.split(/\s+/).filter((word: string) => word.length > 3);
     
     // Find the most relevant package based on keywords
     let relevantPackage = null;
     
     for (const pkg of this.config.packages) {
-      if (words.some(word => pkg.name.toLowerCase().includes(word) || 
+      if (words.some((word: string) => pkg.name.toLowerCase().includes(word) || 
                     (pkg.path && pkg.path.toLowerCase().includes(word)))) {
         relevantPackage = pkg;
         break;

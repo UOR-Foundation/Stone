@@ -118,12 +118,12 @@ export class FeatureWorkflow {
     });
 
     // Find the test file
-    const testFileComment = comments.find(comment => 
+    const testFileComment = comments.find((comment: { body?: string }) => 
       comment.body && comment.body.includes('## Test File Generated')
     );
 
     // Find the Gherkin specification
-    const gherkinComment = comments.find(comment => 
+    const gherkinComment = comments.find((comment: { body?: string }) => 
       comment.body && comment.body.includes('## Gherkin Specification')
     );
 

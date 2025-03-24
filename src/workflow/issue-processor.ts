@@ -96,7 +96,7 @@ export class IssueProcessor {
     });
 
     // Check if any of the comments contain a Gherkin spec
-    const hasGherkinSpec = comments.some(comment => 
+    const hasGherkinSpec = comments.some((comment: { body?: string }) => 
       comment.body && comment.body.includes('## Gherkin Specification')
     );
 

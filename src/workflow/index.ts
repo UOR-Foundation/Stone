@@ -86,7 +86,7 @@ export class StoneWorkflow {
         // Run audit process
         const criteria = await this.auditSystem.evaluateAuditCriteria(issueNumber);
         const verification = await this.auditSystem.verifyImplementation(issueNumber);
-        const quality = await this.auditSystem.validateCodeQuality({ number: 0 }); // Dummy PR data, would be real in actual use
+        const quality = await this.auditSystem.validateCodeQuality({ number: 0, head: { ref: 'main' } }); // Dummy PR data, would be real in actual use
         
         await this.auditSystem.processAuditResults(issueNumber, {
           criteria,
@@ -145,7 +145,7 @@ export class StoneWorkflow {
       });
 
       // Find the test file comment
-      const testFileComment = comments.find(comment => 
+      const testFileComment = comments.find((comment: { body?: string }) => 
         comment.body && comment.body.includes('## Test File Generated')
       );
 
