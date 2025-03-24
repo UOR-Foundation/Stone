@@ -321,7 +321,7 @@ ${auditPassed ? '✅ The implementation meets all audit criteria and is ready fo
       });
       
       // Filter to only get PRs (not issues)
-      const prs = searchResults.items.filter(item => item.pull_request);
+      const prs = searchResults.items.filter((item: { pull_request: any; number: number }) => item.pull_request);
       
       if (prs.length === 0) {
         return null;
