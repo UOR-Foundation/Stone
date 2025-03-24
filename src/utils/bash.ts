@@ -43,8 +43,8 @@ export class Bash {
       const { stdout, stderr } = await this.execPromise(command, options);
 
       return {
-        stdout,
-        stderr,
+        stdout: stdout.toString(),
+        stderr: stderr.toString(),
         exitCode: 0,
       };
     } catch (error: any) {
