@@ -1,7 +1,7 @@
 import { GitHubClient } from '../github/client';
 import { StoneConfig } from '../config/schema';
 import { Logger } from '../utils/logger';
-import { StoneWorkflow } from '../workflow';
+import { createWorkflowForCLI } from '../workflow/cli-adapter';
 
 /**
  * Handles GitHub webhook events with retry mechanism
@@ -10,7 +10,7 @@ export class WebhookHandler {
   private client: GitHubClient;
   private config: StoneConfig;
   private logger: Logger;
-  private workflow: StoneWorkflow;
+  private workflow: any; // Using any since we're using the adapter
   private issueEvents: { [key: string]: (event: any) => Promise<void> } = {};
   private prEvents: { [key: string]: (event: any) => Promise<void> } = {};
 
@@ -18,7 +18,7 @@ export class WebhookHandler {
     this.client = client;
     this.config = config;
     this.logger = new Logger();
-    this.workflow = new StoneWorkflow(client, config);
+    this.workflow = createWorkflowForCLI(client, config);
 
     // Register event handlers
     this.registerEventHandlers();

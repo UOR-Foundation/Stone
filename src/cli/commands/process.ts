@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { ConfigLoader } from '../../config';
 import { GitHubAuth, GitHubClient } from '../../github';
-import { StoneWorkflow } from '../../workflow';
+import { createWorkflowForCLI } from '../../workflow/cli-adapter';
 import { Logger } from '../../utils/logger';
 
 // Logger instance
@@ -39,8 +39,8 @@ export function processCommand(program: Command): void {
         // Create GitHub client
         const client = new GitHubClient(token, config);
         
-        // Create workflow instance
-        const workflow = new StoneWorkflow(client, config);
+        // Create workflow instance using our adapter
+        const workflow = createWorkflowForCLI(client, config);
         
         // Run the workflow
         await workflow.runWorkflow(workflowType, issueNumber);

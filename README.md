@@ -1,100 +1,126 @@
 # Stone - A Software Factory for GitHub
 
-Stone is a structured system for orchestrating GitHub-based development using Claude Code. It manages the software development process through specialized roles, each with defined responsibilities and boundaries.
+Stone is a structured system for orchestrating GitHub-based development using Claude Code. It implements a software factory approach with specialized roles, each with defined responsibilities and boundaries.
 
-[![Tests](https://github.com/uor-foundation/stone/actions/workflows/test.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/test.yml)
-[![PR Checks](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml)
+## Features
 
-## Overview
+Stone provides a complete software development lifecycle implementation:
 
-Stone helps manage large codebases by breaking down feature implementation into discrete steps with clear ownership:
+1. **Core Infrastructure & Configuration**
+   - Project setup and configuration
+   - GitHub API integration
+   - Command-line interface
 
-- **Role-Based Development**: Different Claude Code instances handle specific roles in the development process
-- **Defined Workflow**: Standardized sequence of steps for feature implementation
-- **Bounded Context**: Each role operates within appropriate context boundaries
-- **GitHub Native**: Uses GitHub issues, PRs, comments, and actions for all workflows
+2. **Role-Based Infrastructure**
+   - Claude Code integration
+   - Role templates (PM, QA, Feature Teams, Auditor, GitHub Actions)
+   - Role orchestration system
 
-## Phase 5: Advanced Features
+3. **Workflow Implementation**
+   - Issue processing
+   - Test framework integration
+   - Feature implementation workflow
+   - Audit system
 
-This release focuses on implementing the following advanced features:
+4. **GitHub Actions Integration**
+   - Workflow file generation
+   - Event-driven architecture
+   - CI/CD integration
 
-### 1. Merge Conflict Resolution
-
-Automates the detection and resolution of merge conflicts in pull requests using Git operations.
-
-- Detects conflicting files
-- Attempts automatic resolution
-- Updates PR status with results
-- Handles edge cases and failures gracefully
-
-### 2. User Feedback Handling
-
-Processes and routes feedback from pull request comments to appropriate teams.
-
-- Analyzes PR comments to extract actionable feedback
-- Determines feedback severity and affected areas
-- Creates and prioritizes issues from feedback
-- Routes issues to appropriate teams based on context
-
-### 3. Documentation Management
-
-Generates and maintains documentation from source code comments.
-
-- Extracts JSDoc comments to generate Markdown documentation
-- Verifies documentation against required elements
-- Creates documentation PRs with updates
-- Handles missing or incomplete documentation
-
-### 4. Error Recovery System
-
-Implements robust error handling and recovery for workflow failures.
-
-- Captures and persists error states
-- Implements graduated recovery strategies
-- Automatically retries failed operations when appropriate
-- Escalates to human team members when necessary
+5. **Advanced Features**
+   - **Merge Conflict Resolution**: Automatically detects and resolves merge conflicts in PRs
+   - **User Feedback Handling**: Analyzes PR comments to extract actionable feedback
+   - **Documentation Management**: Generates and verifies documentation from source code
+   - **Error Recovery System**: Provides robust error handling with graduated recovery strategies
 
 ## Installation
 
 ```bash
-npm install --save-dev @uor-foundation/stone
+npm install @uor-foundation/stone
 ```
 
 ## Usage
 
-Initialize Stone in your repository:
-
 ```bash
+# Initialize Stone in your repository
 npx stone init
-```
 
-Process a specific issue:
-
-```bash
+# Process an issue
 npx stone process --issue 123
-```
 
-View status of all Stone issues:
+# Run a specific workflow step
+npx stone run --workflow pm --issue 123
 
-```bash
+# Check the status of Stone issues
 npx stone status
+
+# Reset a workflow
+npx stone reset --issue 123
 ```
 
-## Documentation
+## Configuration
 
-See [stone-spec.md](stone-spec.md) for detailed documentation.
+Stone is configured via `stone.config.json` in your repository root:
 
-## Contributing
+```json
+{
+  "repository": {
+    "owner": "your-org",
+    "name": "your-repo"
+  },
+  "packages": [
+    {
+      "name": "core",
+      "path": "packages/core",
+      "team": "core-team"
+    }
+  ],
+  "workflow": {
+    "issueTemplate": "feature-request.md",
+    "stoneLabel": "stone-process",
+    "useWebhooks": true,
+    "testCommand": "npm test",
+    "timeoutMinutes": 30
+  }
+}
+```
 
-We welcome contributions to Stone! To contribute:
+## Architecture
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Stone follows a modular, service-based architecture:
 
-All PRs will run automatic tests and code quality checks.
+- **Core Services**: Git, GitHub, FileSystem, Logger, Notification
+- **Workflow Components**: ConflictResolution, FeedbackHandler, DocumentationManager, ErrorRecovery
+- **Integration Layer**: StoneWorkflow, CLI adapter
+
+The advanced features implementation provides:
+
+1. **Conflict Resolution**:
+   - Detects merge conflicts in PRs
+   - Attempts automatic resolution
+   - Updates PR status with results
+
+2. **Feedback Handler**:
+   - Analyzes PR comments for actionable feedback
+   - Creates and prioritizes issues from feedback
+   - Routes issues to appropriate teams
+
+3. **Documentation Manager**:
+   - Extracts documentation from JSDoc comments
+   - Verifies documentation completeness
+   - Creates PRs with documentation updates
+
+4. **Error Recovery**:
+   - Captures detailed error state
+   - Implements graduated recovery strategies
+   - Provides team notification when needed
+
+## Requirements
+
+- Node.js 16+
+- Git
+- GitHub repository with issues and actions enabled
+- GitHub token with appropriate permissions
 
 ## License
 

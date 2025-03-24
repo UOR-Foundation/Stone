@@ -12,6 +12,8 @@ export * from './conflict-resolution';
 export * from './feedback-handler';
 export * from './docs-manager';
 export * from './error-recovery';
+export * from './stone-workflow';
+export * from './cli-adapter';
 
 import { ConflictResolution } from './conflict-resolution';
 import { FeedbackHandler } from './feedback-handler';
