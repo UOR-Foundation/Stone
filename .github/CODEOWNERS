@@ -1,0 +1,5 @@
+# Default owners for everything in the repo
+*       @uor-foundation/stone-maintainers
+
+# Specific ownership for docs
+/docs/  @uor-foundation/documentation-team
