@@ -28,6 +28,13 @@ export const configSchema = Joi.object({
     stoneDirectory: Joi.string().default('.github/stone'),
   }).default(),
   
+  audit: Joi.object({
+    minCodeCoverage: Joi.number().default(80),
+    requiredReviewers: Joi.number().default(1),
+    maxComplexity: Joi.number().default(20),
+    qualityChecks: Joi.array().items(Joi.string()).default(['lint', 'types', 'tests'])
+  }).default(),
+  
   roles: Joi.object({
     pm: Joi.object({
       enabled: Joi.boolean().default(true),
@@ -65,6 +72,7 @@ export interface StoneConfig {
     name: string;
     path: string;
     team: string;
+    dependencies?: string[];
   }>;
   workflow: {
     issueTemplate: string;
@@ -77,6 +85,12 @@ export interface StoneConfig {
     actionsDirectory: string;
     issueTemplateDirectory: string;
     stoneDirectory: string;
+  };
+  audit?: {
+    minCodeCoverage: number;
+    requiredReviewers: number;
+    maxComplexity: number;
+    qualityChecks: string[];
   };
   roles: {
     pm: {
