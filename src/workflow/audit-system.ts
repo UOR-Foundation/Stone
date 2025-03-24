@@ -79,13 +79,13 @@ export class AuditSystem {
     });
     
     // Extract source and test files
-    const sourceFiles = files.filter(file => 
+    const sourceFiles = files.filter((file: { filename: string }) => 
       file.filename.endsWith('.ts') && 
       !file.filename.includes('test') && 
       !file.filename.includes('spec')
     );
     
-    const testFiles = files.filter(file => 
+    const testFiles = files.filter((file: { filename: string }) => 
       file.filename.includes('test') || 
       file.filename.includes('spec')
     );
@@ -93,8 +93,8 @@ export class AuditSystem {
     // Calculate code coverage estimate based on test/source ratio
     let codeCoverage = 0;
     if (sourceFiles.length > 0) {
-      const testLines = testFiles.reduce((sum, file) => sum + file.changes, 0);
-      const sourceLines = sourceFiles.reduce((sum, file) => sum + file.changes, 0);
+      const testLines = testFiles.reduce((sum: number, file: { changes: number }) => sum + file.changes, 0);
+      const sourceLines = sourceFiles.reduce((sum: number, file: { changes: number }) => sum + file.changes, 0);
       codeCoverage = Math.min(100, Math.round((testLines / sourceLines) * 100));
     }
     
@@ -102,7 +102,7 @@ export class AuditSystem {
     const reviewersAssigned = prData.requested_reviewers ? prData.requested_reviewers.length : 0;
     
     // Calculate complexity score (using a simple heuristic based on changes)
-    const totalChanges = files.reduce((sum, file) => sum + file.changes, 0);
+    const totalChanges = files.reduce((sum: number, file: { changes: number }) => sum + file.changes, 0);
     const complexityScore = Math.min(100, Math.round(totalChanges / 10));
     
     return {
@@ -127,7 +127,7 @@ export class AuditSystem {
     });
 
     // Find the Gherkin specification
-    const gherkinComment = comments.find(comment => 
+    const gherkinComment = comments.find((comment: { body?: string }) => 
       comment.body && comment.body.includes('## Gherkin Specification')
     );
 
@@ -181,7 +181,7 @@ export class AuditSystem {
   /**
    * Validate code quality for a pull request
    */
-  public async validateCodeQuality(prData: any): Promise<CodeQuality> {
+  public async validateCodeQuality(prData: { number: number; head: { ref: string } }): Promise<CodeQuality> {
     this.logger.info(`Validating code quality for PR: #${prData.number}`);
     
     // Get the check runs for the PR
@@ -192,16 +192,16 @@ export class AuditSystem {
     });
     
     // Check if lint, types, and tests all pass
-    const lintCheck = checkRuns.check_runs.find(check => 
+    const lintCheck = checkRuns.check_runs.find((check: { name: string }) => 
       check.name.toLowerCase().includes('lint')
     );
     
-    const typeCheck = checkRuns.check_runs.find(check => 
+    const typeCheck = checkRuns.check_runs.find((check: { name: string }) => 
       check.name.toLowerCase().includes('type') || 
       check.name.toLowerCase().includes('tsc')
     );
     
-    const testCheck = checkRuns.check_runs.find(check => 
+    const testCheck = checkRuns.check_runs.find((check: { name: string }) => 
       check.name.toLowerCase().includes('test')
     );
     
