@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import sinon from 'sinon';
 import { RepositoryOptimizer } from '../../../src/scalability/repository-optimizer';
 import { GitService } from '../../../src/services/git-service';
@@ -60,12 +58,12 @@ describe('RepositoryOptimizer', () => {
       const repoPath = '/path/to/repo';
       const stats = await repositoryOptimizer.analyzeRepository(repoPath);
       
-      expect(stats).to.be.an('object');
-      expect(stats.objectCount).to.equal(11000); // 1000 + 10000
-      expect(stats.sizeInKb).to.equal(5500); // 500 + 5000
-      expect(stats.commitCount).to.equal(1500);
-      expect(stats.fileCount).to.equal(3000);
-      expect(stats.packRatio).to.be.closeTo(0.909, 0.001); // 10000 / 11000
+      expect(stats).toBeInstanceOf(Object);
+      expect(stats.objectCount).toBe(11000); // 1000 + 10000
+      expect(stats.sizeInKb).toBe(5500); // 500 + 5000
+      expect(stats.commitCount).toBe(1500);
+      expect(stats.fileCount).toBe(3000);
+      expect(stats.packRatio).toBeCloseTo(0.909, 3); // 10000 / 11000
     });
 
     it('should handle git command failures', async () => {
@@ -74,10 +72,10 @@ describe('RepositoryOptimizer', () => {
       try {
         await repositoryOptimizer.analyzeRepository('/path/to/repo');
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Failed to analyze repository');
-        expect(loggerStub.error.calledOnce).to.be.true;
+        expect(error.message).toContain('Failed to analyze repository');
+        expect(loggerStub.error.calledOnce).toBe(true);
       }
     });
   });
@@ -93,18 +91,18 @@ describe('RepositoryOptimizer', () => {
       const repoPath = '/path/to/repo';
       const result = await repositoryOptimizer.optimizeRepository(repoPath);
       
-      expect(result.success).to.be.true;
-      expect(result.operations).to.include('git-gc');
-      expect(result.operations).to.include('prune');
+      expect(result.success).toBe(true);
+      expect(result.operations).toContain('git-gc');
+      expect(result.operations).toContain('prune');
       
       // Check that the optimization commands were called
       expect(gitServiceStub.execGitCommand.calledWith(
         repoPath, ['gc', '--aggressive']
-      )).to.be.true;
+      )).toBe(true);
       
       expect(gitServiceStub.execGitCommand.calledWith(
         repoPath, ['prune']
-      )).to.be.true;
+      )).toBe(true);
     });
 
     it('should handle optimization failures', async () => {
@@ -124,11 +122,11 @@ describe('RepositoryOptimizer', () => {
       
       const result = await repositoryOptimizer.optimizeRepository('/path/to/repo');
       
-      expect(result.success).to.be.false;
-      expect(result.operations).to.not.include('git-gc');
-      expect(result.operations).to.include('prune');
-      expect(result.errors).to.have.lengthOf(1);
-      expect(result.errors[0]).to.include('GC failed');
+      expect(result.success).toBe(false);
+      expect(result.operations).not.toContain('git-gc');
+      expect(result.operations).toContain('prune');
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0]).toContain('GC failed');
     });
 
     it('should apply custom optimization options', async () => {
@@ -149,11 +147,11 @@ describe('RepositoryOptimizer', () => {
       // Check that options were respected
       expect(gitServiceStub.execGitCommand.calledWith(
         sinon.match.any, ['gc']
-      )).to.be.true;
+      )).toBe(true);
       
       expect(gitServiceStub.execGitCommand.calledWith(
         sinon.match.any, ['gc', '--aggressive']
-      )).to.be.false;
+      )).toBe(false);
     });
   });
 
@@ -171,18 +169,18 @@ describe('RepositoryOptimizer', () => {
       
       const result = await repositoryOptimizer.setupSparseCheckout(repoPath, patterns);
       
-      expect(result.success).to.be.true;
+      expect(result.success).toBe(true);
       
       // Check that sparse checkout was configured
       expect(gitServiceStub.execGitCommand.calledWith(
         repoPath, ['config', 'core.sparseCheckout', 'true']
-      )).to.be.true;
+      )).toBe(true);
       
       // Check that patterns were written to sparse checkout file
-      expect(fsServiceStub.writeFile.calledOnce).to.be.true;
+      expect(fsServiceStub.writeFile.calledOnce).toBe(true);
       const content = fsServiceStub.writeFile.firstCall.args[1];
       for (const pattern of patterns) {
-        expect(content).to.include(pattern);
+        expect(content).toContain(pattern);
       }
     });
 
@@ -192,10 +190,10 @@ describe('RepositoryOptimizer', () => {
       try {
         await repositoryOptimizer.setupSparseCheckout('/path/to/repo', ['src/']);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Failed to set up sparse checkout');
-        expect(loggerStub.error.calledOnce).to.be.true;
+        expect(error.message).toContain('Failed to set up sparse checkout');
+        expect(loggerStub.error.calledOnce).toBe(true);
       }
     });
 
@@ -211,9 +209,9 @@ describe('RepositoryOptimizer', () => {
       try {
         await repositoryOptimizer.setupSparseCheckout('/path/to/repo', []);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('No patterns provided');
+        expect(error.message).toContain('No patterns provided');
       }
     });
   });
@@ -237,10 +235,10 @@ describe('RepositoryOptimizer', () => {
       
       const status = await repositoryOptimizer.getGitLFSStatus('/path/to/repo');
       
-      expect(status.enabled).to.be.true;
-      expect(status.objectsToUpload).to.equal(2);
-      expect(status.objectsToDownload).to.equal(1);
-      expect(status.totalSizeMB).to.equal(60);
+      expect(status.enabled).toBe(true);
+      expect(status.objectsToUpload).toBe(2);
+      expect(status.objectsToDownload).toBe(1);
+      expect(status.totalSizeMB).toBe(60);
     });
 
     it('should handle repositories without LFS enabled', async () => {
@@ -251,9 +249,9 @@ describe('RepositoryOptimizer', () => {
       
       const status = await repositoryOptimizer.getGitLFSStatus('/path/to/repo');
       
-      expect(status.enabled).to.be.false;
-      expect(status.objectsToUpload).to.equal(0);
-      expect(status.objectsToDownload).to.equal(0);
+      expect(status.enabled).toBe(false);
+      expect(status.objectsToUpload).toBe(0);
+      expect(status.objectsToDownload).toBe(0);
     });
   });
 
@@ -269,19 +267,19 @@ describe('RepositoryOptimizer', () => {
       
       const result = await repositoryOptimizer.setupGitLFS(repoPath, patterns);
       
-      expect(result.success).to.be.true;
-      expect(result.patterns).to.deep.equal(patterns);
+      expect(result.success).toBe(true);
+      expect(result.patterns).toEqual(patterns);
       
       // Check LFS install command
       expect(gitServiceStub.execGitCommand.calledWith(
         repoPath, ['lfs', 'install']
-      )).to.be.true;
+      )).toBe(true);
       
       // Check track commands for each pattern
       for (const pattern of patterns) {
         expect(gitServiceStub.execGitCommand.calledWith(
           repoPath, ['lfs', 'track', pattern]
-        )).to.be.true;
+        )).toBe(true);
       }
     });
 
@@ -294,10 +292,10 @@ describe('RepositoryOptimizer', () => {
       try {
         await repositoryOptimizer.setupGitLFS('/path/to/repo', ['*.bin']);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Failed to set up Git LFS');
-        expect(loggerStub.error.calledOnce).to.be.true;
+        expect(error.message).toContain('Failed to set up Git LFS');
+        expect(loggerStub.error.calledOnce).toBe(true);
       }
     });
   });
@@ -315,9 +313,9 @@ describe('RepositoryOptimizer', () => {
       
       const result = await repositoryOptimizer.shouldUseShallowClone('/path/to/repo');
       
-      expect(result.recommended).to.be.true;
-      expect(result.recommendedDepth).to.be.a('number');
-      expect(result.reason).to.include('large repository');
+      expect(result.recommended).toBe(true);
+      expect(result.recommendedDepth).toEqual(expect.any(Number));
+      expect(result.reason).toContain('large repository');
     });
 
     it('should not recommend shallow clone for small repositories', async () => {
@@ -332,7 +330,7 @@ describe('RepositoryOptimizer', () => {
       
       const result = await repositoryOptimizer.shouldUseShallowClone('/path/to/repo');
       
-      expect(result.recommended).to.be.false;
+      expect(result.recommended).toBe(false);
     });
 
     it('should respect custom thresholds', async () => {
@@ -351,7 +349,7 @@ describe('RepositoryOptimizer', () => {
         { sizeThresholdKb: 10000, commitThreshold: 100 }
       );
       
-      expect(resultWithLowThresholds.recommended).to.be.true;
+      expect(resultWithLowThresholds.recommended).toBe(true);
       
       // With high thresholds, shallow clone should not be recommended
       const resultWithHighThresholds = await repositoryOptimizer.shouldUseShallowClone(
@@ -359,7 +357,7 @@ describe('RepositoryOptimizer', () => {
         { sizeThresholdKb: 50000, commitThreshold: 1000 }
       );
       
-      expect(resultWithHighThresholds.recommended).to.be.false;
+      expect(resultWithHighThresholds.recommended).toBe(false);
     });
   });
 });

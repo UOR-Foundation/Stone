@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import sinon from 'sinon';
 import { RateLimiter } from '../../../src/performance/rate-limiter';
 import { LoggerService } from '../../../src/services/logger-service';
@@ -31,9 +29,9 @@ describe('RateLimiter', () => {
       rateLimiter.registerLimit('github-api', 5000, 60);
       
       const limits = rateLimiter.getLimits();
-      expect(limits).to.have.property('github-api');
-      expect(limits['github-api'].maxRequests).to.equal(5000);
-      expect(limits['github-api'].windowSeconds).to.equal(60);
+      expect(limits).toHaveProperty('github-api');
+      expect(limits['github-api'].maxRequests).toBe(5000);
+      expect(limits['github-api'].windowSeconds).toBe(60);
     });
 
     it('should override existing limits with the same key', () => {
@@ -41,8 +39,8 @@ describe('RateLimiter', () => {
       rateLimiter.registerLimit('github-api', 3000, 30);
       
       const limits = rateLimiter.getLimits();
-      expect(limits['github-api'].maxRequests).to.equal(3000);
-      expect(limits['github-api'].windowSeconds).to.equal(30);
+      expect(limits['github-api'].maxRequests).toBe(3000);
+      expect(limits['github-api'].windowSeconds).toBe(30);
     });
   });
 
@@ -53,8 +51,8 @@ describe('RateLimiter', () => {
       // First 30 requests should be successful
       for (let i = 0; i < 30; i++) {
         const result = await rateLimiter.acquireToken('search-api');
-        expect(result.success).to.be.true;
-        expect(result.remaining).to.equal(30 - i - 1);
+        expect(result.success).toBe(true);
+        expect(result.remaining).toBe(30 - i - 1);
       }
     });
 
@@ -64,13 +62,13 @@ describe('RateLimiter', () => {
       // First 3 requests should be successful
       for (let i = 0; i < 3; i++) {
         const result = await rateLimiter.acquireToken('search-api');
-        expect(result.success).to.be.true;
+        expect(result.success).toBe(true);
       }
       
       // Next request should be denied
       const result = await rateLimiter.acquireToken('search-api');
-      expect(result.success).to.be.false;
-      expect(result.retryAfter).to.be.a('number');
+      expect(result.success).toBe(false);
+      expect(result.retryAfter).toEqual(expect.any(Number));
     });
 
     it('should return false with retryAfter when limit is exceeded', async () => {
@@ -82,9 +80,9 @@ describe('RateLimiter', () => {
       
       // Next request should fail with retryAfter
       const result = await rateLimiter.acquireToken('api');
-      expect(result.success).to.be.false;
-      expect(result.retryAfter).to.be.at.least(1);
-      expect(result.remaining).to.equal(0);
+      expect(result.success).toBe(false);
+      expect(result.retryAfter).toBeGreaterThanOrEqual(1);
+      expect(result.remaining).toBe(0);
     });
 
     it('should reset token count after window time has passed', async () => {
@@ -96,15 +94,15 @@ describe('RateLimiter', () => {
       
       // Next request should fail
       let result = await rateLimiter.acquireToken('api');
-      expect(result.success).to.be.false;
+      expect(result.success).toBe(false);
       
       // Advance time past the window
       clock.tick(61 * 1000);
       
       // Next request should succeed after reset
       result = await rateLimiter.acquireToken('api');
-      expect(result.success).to.be.true;
-      expect(result.remaining).to.equal(1);
+      expect(result.success).toBe(true);
+      expect(result.remaining).toBe(1);
     });
 
     it('should handle unknown limit keys by creating a default limit', async () => {
@@ -112,10 +110,10 @@ describe('RateLimiter', () => {
       const result = await rateLimiter.acquireToken('unknown-api');
       
       // Should create a default limit and succeed
-      expect(result.success).to.be.true;
+      expect(result.success).toBe(true);
       
       const limits = rateLimiter.getLimits();
-      expect(limits).to.have.property('unknown-api');
+      expect(limits).toHaveProperty('unknown-api');
     });
   });
 
@@ -125,8 +123,8 @@ describe('RateLimiter', () => {
       
       // No requests yet
       const result = rateLimiter.isRateLimited('api');
-      expect(result.limited).to.be.false;
-      expect(result.remaining).to.equal(2);
+      expect(result.limited).toBe(false);
+      expect(result.remaining).toBe(2);
     });
 
     it('should return true if limit is reached', async () => {
@@ -138,9 +136,9 @@ describe('RateLimiter', () => {
       
       // Check if limited
       const result = rateLimiter.isRateLimited('api');
-      expect(result.limited).to.be.true;
-      expect(result.remaining).to.equal(0);
-      expect(result.retryAfter).to.be.a('number');
+      expect(result.limited).toBe(true);
+      expect(result.remaining).toBe(0);
+      expect(result.retryAfter).toEqual(expect.any(Number));
     });
   });
 
@@ -160,12 +158,12 @@ describe('RateLimiter', () => {
       
       // api1 should be reset
       const result1 = rateLimiter.isRateLimited('api1');
-      expect(result1.limited).to.be.false;
-      expect(result1.remaining).to.equal(2);
+      expect(result1.limited).toBe(false);
+      expect(result1.remaining).toBe(2);
       
       // api2 should still have usage
       const result2 = rateLimiter.isRateLimited('api2');
-      expect(result2.remaining).to.equal(3);
+      expect(result2.remaining).toBe(3);
     });
 
     it('should reset all limits when called without key', async () => {
@@ -183,12 +181,12 @@ describe('RateLimiter', () => {
       
       // Both should be reset
       const result1 = rateLimiter.isRateLimited('api1');
-      expect(result1.limited).to.be.false;
-      expect(result1.remaining).to.equal(2);
+      expect(result1.limited).toBe(false);
+      expect(result1.remaining).toBe(2);
       
       const result2 = rateLimiter.isRateLimited('api2');
-      expect(result2.limited).to.be.false;
-      expect(result2.remaining).to.equal(2);
+      expect(result2.limited).toBe(false);
+      expect(result2.remaining).toBe(2);
     });
   });
 
@@ -202,7 +200,7 @@ describe('RateLimiter', () => {
       await rateLimiter.waitForToken('api');
       
       // Should not have advanced the clock
-      expect(Date.now() - start).to.equal(0);
+      expect(Date.now() - start).toBe(0);
     });
 
     it('should wait until token is available', async () => {
@@ -222,7 +220,7 @@ describe('RateLimiter', () => {
         tokenPromise.then(() => true),
         Promise.resolve(false)
       ]);
-      expect(isResolved).to.be.false;
+      expect(isResolved).toBe(false);
       
       // Advance time past reset
       clock.tick(200); // total 5.1 seconds
@@ -232,7 +230,7 @@ describe('RateLimiter', () => {
       
       // Should be able to get a token now
       const result = await rateLimiter.acquireToken('api');
-      expect(result.success).to.be.true;
+      expect(result.success).toBe(true);
     });
 
     it('should time out if token does not become available', async () => {
@@ -245,9 +243,9 @@ describe('RateLimiter', () => {
       try {
         await rateLimiter.waitForToken('api', 5);
         // Should not reach here
-        expect.fail('Should have timed out');
+        fail('Should have timed out');
       } catch (error) {
-        expect(error.message).to.include('Timeout waiting for rate limit token');
+        expect(error.message).toContain('Timeout waiting for rate limit token');
       }
     });
   });
@@ -265,8 +263,8 @@ describe('RateLimiter', () => {
       });
       
       const limits = rateLimiter.getLimits();
-      expect(limits['github-api'].maxRequests).to.equal(5000);
-      expect(limits['github-api'].used).to.equal(10); // 5000 - 4990
+      expect(limits['github-api'].maxRequests).toBe(5000);
+      expect(limits['github-api'].used).toBe(10); // 5000 - 4990
     });
 
     it('should handle different header formats', () => {
@@ -288,11 +286,11 @@ describe('RateLimiter', () => {
       });
       
       const limits = rateLimiter.getLimits();
-      expect(limits['api-a'].maxRequests).to.equal(5000);
-      expect(limits['api-a'].used).to.equal(100);
+      expect(limits['api-a'].maxRequests).toBe(5000);
+      expect(limits['api-a'].used).toBe(100);
       
-      expect(limits['api-b'].maxRequests).to.equal(1000);
-      expect(limits['api-b'].used).to.equal(50);
+      expect(limits['api-b'].maxRequests).toBe(1000);
+      expect(limits['api-b'].used).toBe(50);
     });
 
     it('should auto-register a new limit when one does not exist', () => {
@@ -304,10 +302,10 @@ describe('RateLimiter', () => {
       });
       
       const limits = rateLimiter.getLimits();
-      expect(limits).to.have.property('new-api');
-      expect(limits['new-api'].maxRequests).to.equal(1000);
-      expect(limits['new-api'].used).to.equal(5);
-      expect(limits['new-api'].windowSeconds).to.be.at.least(60);
+      expect(limits).toHaveProperty('new-api');
+      expect(limits['new-api'].maxRequests).toBe(1000);
+      expect(limits['new-api'].used).toBe(5);
+      expect(limits['new-api'].windowSeconds).toBeGreaterThanOrEqual(60);
     });
   });
 });

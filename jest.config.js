@@ -4,9 +4,7 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testMatch: ['**/test/**/*.test.ts'],
   testPathIgnorePatterns: [
-    'node_modules/',
-    '/test/unit/performance/',
-    '/test/unit/scalability/'
+    'node_modules/'
   ],
   collectCoverage: true,
   coverageDirectory: 'coverage',

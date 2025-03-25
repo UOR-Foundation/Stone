@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import sinon from 'sinon';
 import { ParallelExecutor } from '../../../src/performance/parallel-executor';
 import { LoggerService } from '../../../src/services/logger-service';
@@ -29,7 +27,7 @@ describe('ParallelExecutor', () => {
       
       const results = await parallelExecutor.executeInParallel(tasks);
       
-      expect(results).to.deep.equal(['Task 1', 'Task 2', 'Task 3']);
+      expect(results).toEqual(['Task 1', 'Task 2', 'Task 3']);
     });
 
     it('should respect maxConcurrent limit', async () => {
@@ -60,10 +58,10 @@ describe('ParallelExecutor', () => {
       // Set max concurrent to 2
       const results = await parallelExecutor.executeInParallel(tasks, 2);
       
-      expect(results.length).to.equal(5);
-      expect(results).to.include('Task 1');
-      expect(results).to.include('Task 2');
-      expect(maxRunning).to.equal(2); // Should never exceed 2 concurrent tasks
+      expect(results.length).toBe(5);
+      expect(results).toContain('Task 1');
+      expect(results).toContain('Task 2');
+      expect(maxRunning).toBe(2); // Should never exceed 2 concurrent tasks
     });
 
     it('should handle task failures gracefully', async () => {
@@ -76,24 +74,24 @@ describe('ParallelExecutor', () => {
       try {
         await parallelExecutor.executeInParallel(tasks);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('One or more parallel tasks failed');
-        expect(error.errors.length).to.equal(1);
-        expect(error.errors[0].message).to.equal('Task 2 failed');
-        expect(error.results).to.deep.equal(['Task 1', undefined, 'Task 3']);
+        expect(error.message).toBe('One or more parallel tasks failed');
+        expect(error.errors.length).toBe(1);
+        expect(error.errors[0].message).toBe('Task 2 failed');
+        expect(error.results).toEqual(['Task 1', undefined, 'Task 3']);
       }
     });
 
     it('should handle empty task array', async () => {
       const results = await parallelExecutor.executeInParallel([]);
-      expect(results).to.be.an('array').that.is.empty;
+      expect(results).toEqual([]);
     });
 
     it('should handle single task execution', async () => {
       const task = async () => 'Single Task';
       const results = await parallelExecutor.executeInParallel([task]);
-      expect(results).to.deep.equal(['Single Task']);
+      expect(results).toEqual(['Single Task']);
     });
   });
 
@@ -122,8 +120,8 @@ describe('ParallelExecutor', () => {
         3  // maxConcurrent
       );
       
-      expect(results).to.deep.equal([2, 4, 6, 8, 10]);
-      expect(maxRunning).to.equal(3); // Should never exceed 3 concurrent tasks
+      expect(results).toEqual([2, 4, 6, 8, 10]);
+      expect(maxRunning).toBe(3); // Should never exceed 3 concurrent tasks
     });
 
     it('should handle errors in processor function', async () => {
@@ -139,14 +137,14 @@ describe('ParallelExecutor', () => {
       try {
         await parallelExecutor.executeWithConcurrencyControl(items, processorFn, 2);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('One or more parallel tasks failed');
-        expect(error.errors.length).to.equal(1);
-        expect(error.errors[0].message).to.equal('Item 3 failed');
+        expect(error.message).toBe('One or more parallel tasks failed');
+        expect(error.errors.length).toBe(1);
+        expect(error.errors[0].message).toBe('Item 3 failed');
         
         // Should still have results for successful items
-        expect(error.results).to.deep.equal([2, 4, undefined, 8, 10]);
+        expect(error.results).toEqual([2, 4, undefined, 8, 10]);
       }
     });
 
@@ -163,11 +161,11 @@ describe('ParallelExecutor', () => {
       try {
         await parallelExecutor.executeWithConcurrencyControl(items, processorFn, 2);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('One or more parallel tasks failed');
-        expect(error.errors.length).to.equal(1);
-        expect(error.errors[0].message).to.equal('Sync error');
+        expect(error.message).toBe('One or more parallel tasks failed');
+        expect(error.errors.length).toBe(1);
+        expect(error.errors[0].message).toBe('Sync error');
       }
     });
   });
@@ -184,7 +182,7 @@ describe('ParallelExecutor', () => {
       
       const results = await parallelExecutor.mapInParallel(items, mapperFn);
       
-      expect(results).to.deep.equal([3, 6, 9, 12, 15]);
+      expect(results).toEqual([3, 6, 9, 12, 15]);
     });
 
     it('should preserve order of results', async () => {
@@ -199,7 +197,7 @@ describe('ParallelExecutor', () => {
       const results = await parallelExecutor.mapInParallel(items, mapperFn);
       
       // Results should be in the same order as input items
-      expect(results).to.deep.equal([10, 6, 2, 8, 4]);
+      expect(results).toEqual([10, 6, 2, 8, 4]);
     });
 
     it('should handle errors in mapper function', async () => {
@@ -215,12 +213,12 @@ describe('ParallelExecutor', () => {
       try {
         await parallelExecutor.mapInParallel(items, mapperFn);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('One or more parallel tasks failed');
-        expect(error.errors.length).to.equal(1);
-        expect(error.errors[0].message).to.equal('Failed on item c');
-        expect(error.results).to.deep.equal(['A', 'B', undefined, 'D']);
+        expect(error.message).toBe('One or more parallel tasks failed');
+        expect(error.errors.length).toBe(1);
+        expect(error.errors[0].message).toBe('Failed on item c');
+        expect(error.results).toEqual(['A', 'B', undefined, 'D']);
       }
     });
 
@@ -244,7 +242,7 @@ describe('ParallelExecutor', () => {
       
       await parallelExecutor.mapInParallel(items, mapperFn, 4);
       
-      expect(maxRunning).to.equal(4); // Should never exceed 4 concurrent tasks
+      expect(maxRunning).toBe(4); // Should never exceed 4 concurrent tasks
     });
   });
 
@@ -265,14 +263,14 @@ describe('ParallelExecutor', () => {
       const results = await parallelExecutor.processBatches(items, batchProcessor, 3);
       
       // Should have split into 4 batches
-      expect(batchGroups.length).to.equal(4);
-      expect(batchGroups[0]).to.deep.equal([1, 2, 3]);
-      expect(batchGroups[1]).to.deep.equal([4, 5, 6]);
-      expect(batchGroups[2]).to.deep.equal([7, 8, 9]);
-      expect(batchGroups[3]).to.deep.equal([10]);
+      expect(batchGroups.length).toBe(4);
+      expect(batchGroups[0]).toEqual([1, 2, 3]);
+      expect(batchGroups[1]).toEqual([4, 5, 6]);
+      expect(batchGroups[2]).toEqual([7, 8, 9]);
+      expect(batchGroups[3]).toEqual([10]);
       
       // Results should be correctly mapped
-      expect(results).to.deep.equal([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
+      expect(results).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
     });
 
     it('should process batches in parallel with controlled concurrency', async () => {
@@ -302,15 +300,15 @@ describe('ParallelExecutor', () => {
         3    // maxConcurrentBatches
       );
       
-      expect(results.length).to.equal(30);
-      expect(maxRunningBatches).to.equal(3); // Should never exceed 3 concurrent batches
+      expect(results.length).toBe(30);
+      expect(maxRunningBatches).toBe(3); // Should never exceed 3 concurrent batches
       
       // Should have created 6 batches
-      expect(processedBatches.length).to.equal(6);
+      expect(processedBatches.length).toBe(6);
       
       // Each batch should have 5 items (except maybe the last one)
       for (let i = 0; i < processedBatches.length - 1; i++) {
-        expect(processedBatches[i].length).to.equal(5);
+        expect(processedBatches[i].length).toBe(5);
       }
     });
 
@@ -327,22 +325,22 @@ describe('ParallelExecutor', () => {
       try {
         await parallelExecutor.processBatches(items, batchProcessor, 3);
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('One or more batch processing tasks failed');
-        expect(error.errors.length).to.equal(1);
-        expect(error.errors[0].message).to.equal('Failed on batch with item 6');
+        expect(error.message).toBe('One or more batch processing tasks failed');
+        expect(error.errors.length).toBe(1);
+        expect(error.errors[0].message).toBe('Failed on batch with item 6');
         
         // Should have partial results
-        expect(error.results).to.include(2);
-        expect(error.results).to.include(4);
-        expect(error.results).to.include(16);
-        expect(error.results).to.include(18);
+        expect(error.results).toContain(2);
+        expect(error.results).toContain(4);
+        expect(error.results).toContain(16);
+        expect(error.results).toContain(18);
         
         // Results from failed batch should be undefined
         const resultsArray = error.results;
         const hasSomeUndefined = resultsArray.some(r => r === undefined);
-        expect(hasSomeUndefined).to.be.true;
+        expect(hasSomeUndefined).toBe(true);
       }
     });
   });

@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import sinon from 'sinon';
 import { PerformanceMonitor } from '../../../src/performance/performance-monitor';
 import { LoggerService } from '../../../src/services/logger-service';
@@ -33,8 +31,8 @@ describe('PerformanceMonitor', () => {
     it('should start a timer for a given operation', () => {
       const timerId = performanceMonitor.startTimer('api-request', { endpoint: '/users' });
       
-      expect(timerId).to.be.a('string');
-      expect(performanceMonitor.getActiveTimerCount()).to.equal(1);
+      expect(typeof timerId).toBe('string');
+      expect(performanceMonitor.getActiveTimerCount()).toBe(1);
     });
 
     it('should handle multiple timers', () => {
@@ -42,7 +40,7 @@ describe('PerformanceMonitor', () => {
       performanceMonitor.startTimer('api-request-2');
       performanceMonitor.startTimer('api-request-3');
       
-      expect(performanceMonitor.getActiveTimerCount()).to.equal(3);
+      expect(performanceMonitor.getActiveTimerCount()).toBe(3);
     });
   });
 
@@ -55,16 +53,16 @@ describe('PerformanceMonitor', () => {
       
       const result = performanceMonitor.stopTimer(timerId);
       
-      expect(result).to.be.an('object');
-      expect(result.operation).to.equal('api-request');
-      expect(result.durationMs).to.be.at.least(150);
-      expect(performanceMonitor.getActiveTimerCount()).to.equal(0);
+      expect(result).toBeInstanceOf(Object);
+      expect(result.operation).toBe('api-request');
+      expect(result.durationMs).toBeGreaterThanOrEqual(150);
+      expect(performanceMonitor.getActiveTimerCount()).toBe(0);
     });
 
     it('should return null for invalid timer ID', () => {
       const result = performanceMonitor.stopTimer('invalid-id');
       
-      expect(result).to.be.null;
+      expect(result).toBeNull();
     });
 
     it('should include context data in timer result', () => {
@@ -75,7 +73,7 @@ describe('PerformanceMonitor', () => {
       
       const result = performanceMonitor.stopTimer(timerId);
       
-      expect(result.context).to.deep.equal(context);
+      expect(result.context).toEqual(context);
     });
 
     it('should allow adding additional context when stopping', () => {
@@ -87,8 +85,8 @@ describe('PerformanceMonitor', () => {
       const additionalContext = { status: 200, responseSize: 1024 };
       const result = performanceMonitor.stopTimer(timerId, additionalContext);
       
-      expect(result.context).to.include(initialContext);
-      expect(result.context).to.include(additionalContext);
+      expect(result.context).toMatchObject(initialContext);
+      expect(result.context).toMatchObject(additionalContext);
     });
   });
 
@@ -98,10 +96,11 @@ describe('PerformanceMonitor', () => {
       
       const metrics = performanceMonitor.getMetrics('cpu-usage');
       
-      expect(metrics).to.be.an('array').with.lengthOf(1);
-      expect(metrics[0].name).to.equal('cpu-usage');
-      expect(metrics[0].value).to.equal(45.2);
-      expect(metrics[0].context).to.deep.equal({ server: 'api-1' });
+      expect(Array.isArray(metrics)).toBe(true);
+      expect(metrics.length).toBe(1);
+      expect(metrics[0].name).toBe('cpu-usage');
+      expect(metrics[0].value).toBe(45.2);
+      expect(metrics[0].context).toEqual({ server: 'api-1' });
     });
 
     it('should handle multiple metrics of the same type', () => {
@@ -111,8 +110,9 @@ describe('PerformanceMonitor', () => {
       
       const metrics = performanceMonitor.getMetrics('memory-usage');
       
-      expect(metrics).to.be.an('array').with.lengthOf(3);
-      expect(metrics.map(m => m.value)).to.deep.equal([1024, 2048, 1536]);
+      expect(Array.isArray(metrics)).toBe(true);
+      expect(metrics.length).toBe(3);
+      expect(metrics.map(m => m.value)).toEqual([1024, 2048, 1536]);
     });
   });
 
@@ -129,7 +129,7 @@ describe('PerformanceMonitor', () => {
       const promise = wrapped();
       
       // Should have started a timer
-      expect(performanceMonitor.getActiveTimerCount()).to.equal(1);
+      expect(performanceMonitor.getActiveTimerCount()).toBe(1);
       
       // Advance time
       clock.tick(150);
@@ -137,13 +137,14 @@ describe('PerformanceMonitor', () => {
       // Now await the result
       const result = await promise;
       
-      expect(result).to.equal('result');
-      expect(performanceMonitor.getActiveTimerCount()).to.equal(0);
+      expect(result).toBe('result');
+      expect(performanceMonitor.getActiveTimerCount()).toBe(0);
       
       // Check that the metric was recorded
       const metrics = performanceMonitor.getMetrics('async-operation');
-      expect(metrics).to.be.an('array').with.lengthOf(1);
-      expect(metrics[0].durationMs).to.be.at.least(100);
+      expect(Array.isArray(metrics)).toBe(true);
+      expect(metrics.length).toBe(1);
+      expect(metrics[0].durationMs).toBeGreaterThanOrEqual(100);
     });
 
     it('should capture arguments in context', async () => {
@@ -159,7 +160,7 @@ describe('PerformanceMonitor', () => {
       await wrapped(42, 'test');
       
       const metrics = performanceMonitor.getMetrics('async-with-args');
-      expect(metrics[0].context.args).to.deep.equal([42, 'test']);
+      expect(metrics[0].context.args).toEqual([42, 'test']);
     });
 
     it('should capture return value in context', async () => {
@@ -175,7 +176,7 @@ describe('PerformanceMonitor', () => {
       await wrapped();
       
       const metrics = performanceMonitor.getMetrics('async-with-result');
-      expect(metrics[0].context.result).to.deep.equal({ id: 123, name: 'Test' });
+      expect(metrics[0].context.result).toEqual({ id: 123, name: 'Test' });
     });
 
     it('should handle errors in async functions', async () => {
@@ -191,15 +192,15 @@ describe('PerformanceMonitor', () => {
       try {
         await wrapped();
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.equal('Test error');
+        expect(error.message).toBe('Test error');
       }
       
       const metrics = performanceMonitor.getMetrics('async-with-error');
-      expect(metrics[0].context.error).to.be.an('object');
-      expect(metrics[0].context.error.message).to.equal('Test error');
-      expect(metrics[0].context.success).to.be.false;
+      expect(metrics[0].context.error).toBeInstanceOf(Object);
+      expect(metrics[0].context.error.message).toBe('Test error');
+      expect(metrics[0].context.success).toBe(false);
     });
   });
 
@@ -219,18 +220,18 @@ describe('PerformanceMonitor', () => {
     it('should generate summary statistics for metrics', () => {
       const summary = performanceMonitor.getMetricsSummary();
       
-      expect(summary).to.be.an('object');
-      expect(summary).to.have.property('api-latency');
-      expect(summary).to.have.property('memory-usage');
+      expect(summary).toBeInstanceOf(Object);
+      expect(summary).toHaveProperty('api-latency');
+      expect(summary).toHaveProperty('memory-usage');
       
-      expect(summary['api-latency'].count).to.equal(4);
-      expect(summary['api-latency'].min).to.equal(120);
-      expect(summary['api-latency'].max).to.equal(200);
-      expect(summary['api-latency'].mean).to.be.closeTo(162.5, 0.1);
+      expect(summary['api-latency'].count).toBe(4);
+      expect(summary['api-latency'].min).toBe(120);
+      expect(summary['api-latency'].max).toBe(200);
+      expect(summary['api-latency'].mean).toBeCloseTo(162.5, 1);
       
-      expect(summary['memory-usage'].count).to.equal(3);
-      expect(summary['memory-usage'].min).to.equal(1024);
-      expect(summary['memory-usage'].max).to.equal(2048);
+      expect(summary['memory-usage'].count).toBe(3);
+      expect(summary['memory-usage'].min).toBe(1024);
+      expect(summary['memory-usage'].max).toBe(2048);
     });
 
     it('should filter metrics by time range', () => {
@@ -245,13 +246,13 @@ describe('PerformanceMonitor', () => {
       });
       
       // Should only include the newest metrics
-      expect(summary['api-latency'].count).to.equal(1);
-      expect(summary['api-latency'].min).to.equal(300);
-      expect(summary['api-latency'].max).to.equal(300);
+      expect(summary['api-latency'].count).toBe(1);
+      expect(summary['api-latency'].min).toBe(300);
+      expect(summary['api-latency'].max).toBe(300);
       
-      expect(summary['memory-usage'].count).to.equal(1);
-      expect(summary['memory-usage'].min).to.equal(3072);
-      expect(summary['memory-usage'].max).to.equal(3072);
+      expect(summary['memory-usage'].count).toBe(1);
+      expect(summary['memory-usage'].min).toBe(3072);
+      expect(summary['memory-usage'].max).toBe(3072);
     });
 
     it('should filter metrics by name', () => {
@@ -259,8 +260,8 @@ describe('PerformanceMonitor', () => {
         metricNames: ['api-latency']
       });
       
-      expect(summary).to.have.property('api-latency');
-      expect(summary).to.not.have.property('memory-usage');
+      expect(summary).toHaveProperty('api-latency');
+      expect(summary).not.toHaveProperty('memory-usage');
     });
 
     it('should group metrics by context', () => {
@@ -269,17 +270,17 @@ describe('PerformanceMonitor', () => {
         groupBy: 'endpoint'
       });
       
-      expect(summary['api-latency']).to.be.an('object');
-      expect(summary['api-latency']).to.have.property('/users');
-      expect(summary['api-latency']).to.have.property('/posts');
+      expect(summary['api-latency']).toBeInstanceOf(Object);
+      expect(summary['api-latency']).toHaveProperty('/users');
+      expect(summary['api-latency']).toHaveProperty('/posts');
       
-      expect(summary['api-latency']['/users'].count).to.equal(2);
-      expect(summary['api-latency']['/users'].min).to.equal(120);
-      expect(summary['api-latency']['/users'].max).to.equal(150);
+      expect(summary['api-latency']['/users'].count).toBe(2);
+      expect(summary['api-latency']['/users'].min).toBe(120);
+      expect(summary['api-latency']['/users'].max).toBe(150);
       
-      expect(summary['api-latency']['/posts'].count).to.equal(2);
-      expect(summary['api-latency']['/posts'].min).to.equal(180);
-      expect(summary['api-latency']['/posts'].max).to.equal(200);
+      expect(summary['api-latency']['/posts'].count).toBe(2);
+      expect(summary['api-latency']['/posts'].min).toBe(180);
+      expect(summary['api-latency']['/posts'].max).toBe(200);
     });
   });
 
@@ -295,18 +296,19 @@ describe('PerformanceMonitor', () => {
       const filePath = '/path/to/metrics.json';
       await performanceMonitor.saveMetricsToFile(filePath);
       
-      expect(fsServiceStub.ensureDirectoryExists.calledOnce).to.be.true;
-      expect(fsServiceStub.writeFile.calledOnce).to.be.true;
+      expect(fsServiceStub.ensureDirectoryExists.calledOnce).toBe(true);
+      expect(fsServiceStub.writeFile.calledOnce).toBe(true);
       
       // Check the content being written
       const content = fsServiceStub.writeFile.firstCall.args[1];
       const data = JSON.parse(content);
       
-      expect(data).to.be.an('object');
-      expect(data.metrics).to.be.an('array').with.lengthOf(2);
-      expect(data.summary).to.be.an('object');
-      expect(data.summary).to.have.property('api-latency');
-      expect(data.summary).to.have.property('memory-usage');
+      expect(data).toBeInstanceOf(Object);
+      expect(Array.isArray(data.metrics)).toBe(true);
+      expect(data.metrics.length).toBe(2);
+      expect(data.summary).toBeInstanceOf(Object);
+      expect(data.summary).toHaveProperty('api-latency');
+      expect(data.summary).toHaveProperty('memory-usage');
     });
 
     it('should handle file writing errors', async () => {
@@ -318,10 +320,10 @@ describe('PerformanceMonitor', () => {
       try {
         await performanceMonitor.saveMetricsToFile('/path/to/file.json');
         // Should not reach here
-        expect.fail('Should have thrown an error');
+        fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Failed to save metrics');
-        expect(loggerStub.error.calledOnce).to.be.true;
+        expect(error.message).toContain('Failed to save metrics');
+        expect(loggerStub.error.calledOnce).toBe(true);
       }
     });
   });
@@ -331,13 +333,13 @@ describe('PerformanceMonitor', () => {
       performanceMonitor.recordMetric('metric1', 1);
       performanceMonitor.recordMetric('metric2', 2);
       
-      expect(performanceMonitor.getMetrics('metric1')).to.have.lengthOf(1);
-      expect(performanceMonitor.getMetrics('metric2')).to.have.lengthOf(1);
+      expect(performanceMonitor.getMetrics('metric1').length).toBe(1);
+      expect(performanceMonitor.getMetrics('metric2').length).toBe(1);
       
       performanceMonitor.clearMetrics();
       
-      expect(performanceMonitor.getMetrics('metric1')).to.be.an('array').that.is.empty;
-      expect(performanceMonitor.getMetrics('metric2')).to.be.an('array').that.is.empty;
+      expect(performanceMonitor.getMetrics('metric1')).toEqual([]);
+      expect(performanceMonitor.getMetrics('metric2')).toEqual([]);
     });
 
     it('should clear metrics of a specific type', () => {
@@ -346,8 +348,8 @@ describe('PerformanceMonitor', () => {
       
       performanceMonitor.clearMetrics('metric1');
       
-      expect(performanceMonitor.getMetrics('metric1')).to.be.an('array').that.is.empty;
-      expect(performanceMonitor.getMetrics('metric2')).to.have.lengthOf(1);
+      expect(performanceMonitor.getMetrics('metric1')).toEqual([]);
+      expect(performanceMonitor.getMetrics('metric2').length).toBe(1);
     });
   });
 });

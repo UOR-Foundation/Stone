@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
 import sinon from 'sinon';
 import { RequestBatcher } from '../../../src/performance/request-batcher';
 import { LoggerService } from '../../../src/services/logger-service';
@@ -38,8 +36,8 @@ describe('RequestBatcher', () => {
       const request = { id: 1, method: 'GET', url: '/api/users/1' };
       const promise = requestBatcher.queueRequest(request);
       
-      expect(promise).to.be.a('promise');
-      expect(requestBatcher.getQueueSize()).to.equal(1);
+      expect(promise).toBeInstanceOf(Promise);
+      expect(requestBatcher.getQueueSize()).toBe(1);
     });
 
     it('should execute batch when batch size is reached', async () => {
@@ -62,14 +60,14 @@ describe('RequestBatcher', () => {
       }
       
       // Batch should be executed immediately when size is reached
-      expect(execBatchStub.calledOnce).to.be.true;
+      expect(execBatchStub.calledOnce).toBe(true);
       
       // Ensure all promises resolve
       const results = await Promise.all(promises);
       
-      expect(results.length).to.equal(5);
-      expect(results[0].status).to.equal(200);
-      expect(results[0].data.name).to.equal('User 1');
+      expect(results.length).toBe(5);
+      expect(results[0].status).toBe(200);
+      expect(results[0].data.name).toBe('User 1');
     });
 
     it('should execute batch after timeout even if batch size not reached', async () => {
@@ -92,21 +90,21 @@ describe('RequestBatcher', () => {
       });
       
       // Batch should not execute yet
-      expect(execBatchStub.callCount).to.equal(0);
+      expect(execBatchStub.callCount).toBe(0);
       
       // Advance time to trigger timeout
       clock.tick(101);
       
       // Batch should be executed after timeout
-      expect(execBatchStub.calledOnce).to.be.true;
+      expect(execBatchStub.calledOnce).toBe(true);
       
       // Ensure promises resolve
       const [result1, result2] = await Promise.all([promise1, promise2]);
       
-      expect(result1.status).to.equal(200);
-      expect(result1.data.name).to.equal('User 1');
-      expect(result2.status).to.equal(200);
-      expect(result2.data.name).to.equal('User 2');
+      expect(result1.status).toBe(200);
+      expect(result1.data.name).toBe('User 1');
+      expect(result2.status).toBe(200);
+      expect(result2.data.name).toBe('User 2');
     });
   });
 
@@ -117,24 +115,24 @@ describe('RequestBatcher', () => {
       
       // Cancel the request
       const canceled = requestBatcher.cancelRequest(1);
-      expect(canceled).to.be.true;
+      expect(canceled).toBe(true);
       
       // Queue should be empty
-      expect(requestBatcher.getQueueSize()).to.equal(0);
+      expect(requestBatcher.getQueueSize()).toBe(0);
       
       // The promise should reject
       try {
         await promise;
         // Should not reach here
-        expect.fail('Promise should have been rejected');
+        fail('Promise should have been rejected');
       } catch (error) {
-        expect(error.message).to.include('Request canceled');
+        expect(error.message).toContain('Request canceled');
       }
     });
 
     it('should return false if request not found', () => {
       const canceled = requestBatcher.cancelRequest(999);
-      expect(canceled).to.be.false;
+      expect(canceled).toBe(false);
     });
   });
 
@@ -147,20 +145,20 @@ describe('RequestBatcher', () => {
       
       // Prioritize the last request
       const prioritized = requestBatcher.prioritizeRequest(3);
-      expect(prioritized).to.be.true;
+      expect(prioritized).toBe(true);
       
       // Get the queue for inspection (using internal method for testing)
       const queue = requestBatcher['requestQueue'];
       
       // Request with ID 3 should now be first
-      expect(queue[0].id).to.equal(3);
+      expect(queue[0].id).toBe(3);
     });
 
     it('should return false if request not found', () => {
       requestBatcher.queueRequest({ id: 1, method: 'GET', url: '/api/users/1' });
       
       const prioritized = requestBatcher.prioritizeRequest(999);
-      expect(prioritized).to.be.false;
+      expect(prioritized).toBe(false);
     });
   });
 
@@ -178,25 +176,25 @@ describe('RequestBatcher', () => {
       const promise3 = requestBatcher.queueRequest({ id: 3, method: 'GET', url: '/api/users/3' });
       
       // Batch should not execute yet
-      expect(execBatchStub.callCount).to.equal(0);
+      expect(execBatchStub.callCount).toBe(0);
       
       // Flush the queue
       await requestBatcher.flushQueue();
       
       // Batch should be executed
-      expect(execBatchStub.calledOnce).to.be.true;
+      expect(execBatchStub.calledOnce).toBe(true);
       
       // Queue should be empty
-      expect(requestBatcher.getQueueSize()).to.equal(0);
+      expect(requestBatcher.getQueueSize()).toBe(0);
       
       // Promises should be resolved
       const results = await Promise.all([promise1, promise2, promise3]);
-      expect(results.length).to.equal(3);
+      expect(results.length).toBe(3);
     });
 
     it('should do nothing if queue is empty', async () => {
       await requestBatcher.flushQueue();
-      expect(execBatchStub.callCount).to.equal(0);
+      expect(execBatchStub.callCount).toBe(0);
     });
   });
 
@@ -217,19 +215,19 @@ describe('RequestBatcher', () => {
       
       // First request should resolve
       const result1 = await promise1;
-      expect(result1.status).to.equal(200);
+      expect(result1.status).toBe(200);
       
       // Second request should reject
       try {
         await promise2;
-        expect.fail('Promise should have been rejected');
+        fail('Promise should have been rejected');
       } catch (error) {
-        expect(error.message).to.equal('Request failed');
+        expect(error.message).toBe('Request failed');
       }
       
       // Third request should resolve
       const result3 = await promise3;
-      expect(result3.status).to.equal(200);
+      expect(result3.status).toBe(200);
     });
 
     it('should handle errors in batch execution', async () => {
@@ -241,24 +239,24 @@ describe('RequestBatcher', () => {
       // Flush the queue
       try {
         await requestBatcher.flushQueue();
-        expect.fail('Flush should have failed');
+        fail('Flush should have failed');
       } catch (error) {
-        expect(error.message).to.equal('Batch execution failed');
+        expect(error.message).toBe('Batch execution failed');
       }
       
       // All promises should reject
       try {
         await promise1;
-        expect.fail('Promise should have been rejected');
+        fail('Promise should have been rejected');
       } catch (error) {
-        expect(error.message).to.include('Batch execution failed');
+        expect(error.message).toContain('Batch execution failed');
       }
       
       try {
         await promise2;
-        expect.fail('Promise should have been rejected');
+        fail('Promise should have been rejected');
       } catch (error) {
-        expect(error.message).to.include('Batch execution failed');
+        expect(error.message).toContain('Batch execution failed');
       }
     });
   });
@@ -272,7 +270,7 @@ describe('RequestBatcher', () => {
       const promise = requestBatcher.queueRequest({ id: 1, method: 'GET', url: '/api/users/1' });
       
       // Batch should not execute yet
-      expect(execBatchStub.callCount).to.equal(0);
+      expect(execBatchStub.callCount).toBe(0);
       
       // Advance time to trigger timeout
       clock.tick(101);
@@ -281,11 +279,11 @@ describe('RequestBatcher', () => {
       await Promise.resolve();
       
       // Batch should be executed
-      expect(execBatchStub.calledOnce).to.be.true;
+      expect(execBatchStub.calledOnce).toBe(true);
       
       // Promise should be resolved
       const result = await promise;
-      expect(result.status).to.equal(200);
+      expect(result.status).toBe(200);
     });
 
     it('should reset timeout when new request added', async () => {
@@ -306,7 +304,7 @@ describe('RequestBatcher', () => {
       clock.tick(51);
       
       // Batch should not be executed yet
-      expect(execBatchStub.callCount).to.equal(0);
+      expect(execBatchStub.callCount).toBe(0);
       
       // Advance more time to trigger the new timeout
       clock.tick(50);
@@ -315,12 +313,12 @@ describe('RequestBatcher', () => {
       await Promise.resolve();
       
       // Batch should now be executed
-      expect(execBatchStub.calledOnce).to.be.true;
+      expect(execBatchStub.calledOnce).toBe(true);
       
       // Both promises should be resolved
       const [result1, result2] = await Promise.all([promise1, promise2]);
-      expect(result1.status).to.equal(200);
-      expect(result2.status).to.equal(200);
+      expect(result1.status).toBe(200);
+      expect(result2.status).toBe(200);
     });
   });
 });
