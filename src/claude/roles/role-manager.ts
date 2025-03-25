@@ -10,9 +10,21 @@ import { Logger } from '../../utils/logger';
 
 export class RoleManager {
   private logger: Logger;
+  private customRoles: Map<string, any> = new Map();
   
   constructor() {
     this.logger = new Logger();
+  }
+  
+  /**
+   * Registers a custom role with the role manager
+   */
+  registerCustomRole(customRole: any): void {
+    if (this.customRoles.has(customRole.id)) {
+      throw new Error(`Custom role with ID "${customRole.id}" is already registered`);
+    }
+    
+    this.customRoles.set(customRole.id, customRole);
   }
   
   /**
