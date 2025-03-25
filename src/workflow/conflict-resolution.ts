@@ -48,7 +48,7 @@ export class ConflictResolution {
       const mainBranch = this.config.branches?.main || 'main';
       
       // Get the repository path from config
-      const repoPath = this.config.repository.path;
+      const repoPath = this.config.repository.path || process.cwd();
       
       // Find the common ancestor of the two branches
       const mergeBaseResult = await this.gitService.execGitCommand(
@@ -156,7 +156,7 @@ export class ConflictResolution {
   ): Promise<boolean> {
     try {
       this.logger.info(`Attempting automatic conflict resolution for issue #${issueNumber}`);
-      const repoPath = this.config.repository.path;
+      const repoPath = this.config.repository.path || process.cwd();
       const mainBranch = this.config.branches?.main || 'main';
       
       // Ensure we're on the feature branch
@@ -264,7 +264,7 @@ export class ConflictResolution {
       const mainBranch = this.config.branches?.main || 'main';
       
       // Get the repository path from config
-      const repoPath = this.config.repository.path;
+      const repoPath = this.config.repository.path || process.cwd();
       
       // Get branch status
       const branchExists = await this.checkBranchExists(repoPath, branchName);
