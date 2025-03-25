@@ -175,8 +175,8 @@ export class RequestBatcher<T, R> {
       }
       
       this.logger.debug(`Batch processing complete, ${this.queue.length} requests remaining`);
-    } catch (error) {
-      this.logger.error('Error processing batch', { error: error.message });
+    } catch (error: unknown) {
+      this.logger.error('Error processing batch', { error: error instanceof Error ? error.message : String(error) });
       
       // Move failed requests back to the front of the queue
       // This is a simple retry strategy
@@ -185,7 +185,8 @@ export class RequestBatcher<T, R> {
       
       // Reject all requests in case of catastrophic failure
       for (const request of this.queue) {
-        request.reject(new Error(`Batch processing failed: ${error.message}`));
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        request.reject(new Error(`Batch processing failed: ${errorMessage}`));
       }
       
       // Clear the queue

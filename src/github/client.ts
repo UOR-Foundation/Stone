@@ -4,10 +4,20 @@ import { StoneConfig } from '../config';
 export class GitHubClient {
   public octokit: any;
   private config: StoneConfig;
+  private token: string;
 
   constructor(token: string, config: StoneConfig) {
+    this.token = token;
     this.octokit = new Octokit({ auth: token });
     this.config = config;
+  }
+  
+  /**
+   * Get the GitHub token used for authentication
+   * @returns The GitHub token
+   */
+  public getToken(): string {
+    return this.token;
   }
 
   /**

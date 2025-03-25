@@ -16,6 +16,7 @@ export interface GitHubPermissions {
   issues: string[];
   pullRequests: string[];
   branches: string[];
+  [key: string]: string[]; // Allow dynamic indexing
 }
 
 /**

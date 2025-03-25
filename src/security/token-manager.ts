@@ -40,9 +40,10 @@ export class TokenManager {
         this.masterKey = Buffer.from(masterKeyHex, 'hex');
         this.logger.debug('Loaded existing master encryption key');
       }
-    } catch (error) {
-      this.logger.error('Failed to initialize token manager', { error: error.message });
-      throw new Error(`Failed to initialize token manager: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to initialize token manager', { error: errorMessage });
+      throw new Error(`Failed to initialize token manager: ${errorMessage}`);
     }
   }
 
@@ -62,9 +63,10 @@ export class TokenManager {
       
       await this.fsService.writeFile(tokenPath, encryptedToken);
       this.logger.info(`Stored ${type} token securely`);
-    } catch (error) {
-      this.logger.error(`Failed to store token: ${type}`, { error: error.message });
-      throw new Error(`Failed to store token: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to store token: ${type}`, { error: errorMessage });
+      throw new Error(`Failed to store token: ${errorMessage}`);
     }
   }
 
@@ -90,9 +92,10 @@ export class TokenManager {
       
       this.logger.debug(`Retrieved ${type} token`);
       return token;
-    } catch (error) {
-      this.logger.error(`Failed to retrieve token: ${type}`, { error: error.message });
-      throw new Error(`Failed to retrieve token: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to retrieve token: ${type}`, { error: errorMessage });
+      throw new Error(`Failed to retrieve token: ${errorMessage}`);
     }
   }
 
@@ -118,9 +121,10 @@ export class TokenManager {
       
       this.logger.info(`Rotated ${type} token successfully`);
       return newToken;
-    } catch (error) {
-      this.logger.error(`Failed to rotate token: ${type}`, { error: error.message });
-      throw new Error(`Failed to rotate token: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to rotate token: ${type}`, { error: errorMessage });
+      throw new Error(`Failed to rotate token: ${errorMessage}`);
     }
   }
 
@@ -137,8 +141,9 @@ export class TokenManager {
     try {
       const isValid = await validationFn(token);
       return isValid;
-    } catch (error) {
-      this.logger.error('Token validation failed', { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Token validation failed', { error: errorMessage });
       return false;
     }
   }

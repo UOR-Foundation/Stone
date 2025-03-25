@@ -232,8 +232,8 @@ export class ResourceController {
       this.usage.networkUsageMBps = 0; // Placeholder
       
       this.logger.debug('Updated resource usage', { usage: this.usage });
-    } catch (error) {
-      this.logger.error('Failed to update resource usage', { error: error.message });
+    } catch (error: unknown) {
+      this.logger.error('Failed to update resource usage', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -280,8 +280,8 @@ export class ResourceController {
     for (const callback of this.throttleCallbacks) {
       try {
         callback();
-      } catch (error) {
-        this.logger.error('Error in throttle callback', { error: error.message });
+      } catch (error: unknown) {
+        this.logger.error('Error in throttle callback', { error: error instanceof Error ? error.message : String(error) });
       }
     }
   }
@@ -297,8 +297,8 @@ export class ResourceController {
     for (const callback of this.resumeCallbacks) {
       try {
         callback();
-      } catch (error) {
-        this.logger.error('Error in resume callback', { error: error.message });
+      } catch (error: unknown) {
+        this.logger.error('Error in resume callback', { error: error instanceof Error ? error.message : String(error) });
       }
     }
   }

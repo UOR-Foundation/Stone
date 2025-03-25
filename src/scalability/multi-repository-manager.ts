@@ -170,8 +170,9 @@ export class MultiRepositoryManager {
       
       this.logger.info(`Successfully cloned repository: ${name}`);
       return true;
-    } catch (error) {
-      this.logger.error(`Failed to clone repository: ${name}`, { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to clone repository: ${name}`, { error: errorMessage });
       return false;
     }
   }
@@ -213,8 +214,9 @@ export class MultiRepositoryManager {
       
       this.logger.info(`Successfully updated repository: ${name} (branch: ${targetBranch})`);
       return true;
-    } catch (error) {
-      this.logger.error(`Failed to update repository: ${name}`, { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to update repository: ${name}`, { error: errorMessage });
       return false;
     }
   }
@@ -255,10 +257,10 @@ export class MultiRepositoryManager {
         await this.gitService.execGitCommand(repo.path, ['checkout', '-b', branchName]);
         
         result.results[repoName] = { success: true };
-      } catch (error) {
+      } catch (error: unknown) {
         result.results[repoName] = {
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         };
         result.success = false;
       }
@@ -298,10 +300,10 @@ export class MultiRepositoryManager {
         await this.gitService.execGitCommand(repo.path, command);
         
         result.results[repoName] = { success: true };
-      } catch (error) {
+      } catch (error: unknown) {
         result.results[repoName] = {
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         };
         result.success = false;
       }
@@ -344,10 +346,10 @@ export class MultiRepositoryManager {
         if (!optimizeResult.success) {
           result.success = false;
         }
-      } catch (error) {
+      } catch (error: unknown) {
         result.results[repoName] = {
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         };
         result.success = false;
       }
@@ -363,7 +365,7 @@ export class MultiRepositoryManager {
   private async checkLfsInstalled(): Promise<void> {
     try {
       await this.gitService.execGitCommand('.', ['lfs', 'version']);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error('Git LFS is not installed. Please install it to use LFS features.');
     }
   }

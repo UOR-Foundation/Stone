@@ -15,6 +15,14 @@ export class GitHubService {
   }
 
   /**
+   * Get the token being used for GitHub API access
+   * @returns The GitHub API token
+   */
+  public getToken(): string {
+    return this.token;
+  }
+
+  /**
    * Get information about a repository
    * @param owner Repository owner
    * @param repo Repository name
@@ -28,9 +36,10 @@ export class GitHubService {
       });
       
       return response.data;
-    } catch (error) {
-      this.logger.error(`Failed to get repository: ${owner}/${repo}`, { error: error.message });
-      throw new Error(`Failed to get repository: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to get repository: ${owner}/${repo}`, { error: errorMessage });
+      throw new Error(`Failed to get repository: ${errorMessage}`);
     }
   }
 
@@ -50,9 +59,10 @@ export class GitHubService {
       });
       
       return response.data;
-    } catch (error) {
-      this.logger.error(`Failed to list issues: ${owner}/${repo}`, { error: error.message });
-      throw new Error(`Failed to list issues: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to list issues: ${owner}/${repo}`, { error: errorMessage });
+      throw new Error(`Failed to list issues: ${errorMessage}`);
     }
   }
 
@@ -74,9 +84,10 @@ export class GitHubService {
       });
       
       return response.data;
-    } catch (error) {
-      this.logger.error(`Failed to create issue comment: ${owner}/${repo}#${issueNumber}`, { error: error.message });
-      throw new Error(`Failed to create issue comment: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create issue comment: ${owner}/${repo}#${issueNumber}`, { error: errorMessage });
+      throw new Error(`Failed to create issue comment: ${errorMessage}`);
     }
   }
 
@@ -102,9 +113,10 @@ export class GitHubService {
       });
       
       return response.data;
-    } catch (error) {
-      this.logger.error(`Failed to create pull request: ${owner}/${repo}`, { error: error.message });
-      throw new Error(`Failed to create pull request: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create pull request: ${owner}/${repo}`, { error: errorMessage });
+      throw new Error(`Failed to create pull request: ${errorMessage}`);
     }
   }
 }

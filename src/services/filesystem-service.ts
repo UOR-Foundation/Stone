@@ -18,9 +18,10 @@ export class FileSystemService {
       await this.ensureDirectoryExists(path.dirname(filePath));
       await fs.writeFile(filePath, content, 'utf8');
       this.logger.debug(`File written successfully: ${filePath}`);
-    } catch (error) {
-      this.logger.error(`Failed to write file: ${filePath}`, { error: error.message });
-      throw new Error(`Failed to write file: ${filePath} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to write file: ${filePath}`, { error: errorMessage });
+      throw new Error(`Failed to write file: ${filePath} - ${errorMessage}`);
     }
   }
 
@@ -34,9 +35,10 @@ export class FileSystemService {
       const content = await fs.readFile(filePath, 'utf8');
       this.logger.debug(`File read successfully: ${filePath}`);
       return content;
-    } catch (error) {
-      this.logger.error(`Failed to read file: ${filePath}`, { error: error.message });
-      throw new Error(`Failed to read file: ${filePath} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to read file: ${filePath}`, { error: errorMessage });
+      throw new Error(`Failed to read file: ${filePath} - ${errorMessage}`);
     }
   }
 
@@ -50,9 +52,10 @@ export class FileSystemService {
       await this.ensureDirectoryExists(path.dirname(filePath));
       await fs.appendFile(filePath, content, 'utf8');
       this.logger.debug(`Content appended to file: ${filePath}`);
-    } catch (error) {
-      this.logger.error(`Failed to append to file: ${filePath}`, { error: error.message });
-      throw new Error(`Failed to append to file: ${filePath} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to append to file: ${filePath}`, { error: errorMessage });
+      throw new Error(`Failed to append to file: ${filePath} - ${errorMessage}`);
     }
   }
 
@@ -64,9 +67,10 @@ export class FileSystemService {
     try {
       await fs.mkdir(dirPath, { recursive: true });
       this.logger.debug(`Directory exists or was created: ${dirPath}`);
-    } catch (error) {
-      this.logger.error(`Failed to create directory: ${dirPath}`, { error: error.message });
-      throw new Error(`Failed to create directory: ${dirPath} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to create directory: ${dirPath}`, { error: errorMessage });
+      throw new Error(`Failed to create directory: ${dirPath} - ${errorMessage}`);
     }
   }
 
@@ -92,9 +96,10 @@ export class FileSystemService {
     try {
       await fs.unlink(filePath);
       this.logger.debug(`File deleted: ${filePath}`);
-    } catch (error) {
-      this.logger.error(`Failed to delete file: ${filePath}`, { error: error.message });
-      throw new Error(`Failed to delete file: ${filePath} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to delete file: ${filePath}`, { error: errorMessage });
+      throw new Error(`Failed to delete file: ${filePath} - ${errorMessage}`);
     }
   }
 }

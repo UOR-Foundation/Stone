@@ -84,8 +84,8 @@ export class SecurityAuditLogger {
       await this.fsService.appendFile(this.auditLogFile, logLine);
       
       this.logger.debug('Security event logged', { type: event.type, action: event.action });
-    } catch (error) {
-      this.logger.error('Failed to write to security audit log', { error: error.message });
+    } catch (error: unknown) {
+      this.logger.error('Failed to write to security audit log', { error: error instanceof Error ? error.message : String(error) });
       // We intentionally don't rethrow here to avoid disrupting application flow
       // when logging fails, but we do log the error
     }
@@ -144,18 +144,25 @@ export class SecurityAuditLogger {
       }
       
       if (options.startTime) {
-        filteredEvents = filteredEvents.filter(event => 
-          new Date(event.timestamp) >= options.startTime!);
+        filteredEvents = filteredEvents.filter(event => {
+          if (!event.timestamp) return false;
+          return new Date(event.timestamp) >= options.startTime!;
+        });
       }
       
       if (options.endTime) {
-        filteredEvents = filteredEvents.filter(event => 
-          new Date(event.timestamp) <= options.endTime!);
+        filteredEvents = filteredEvents.filter(event => {
+          if (!event.timestamp) return false;
+          return new Date(event.timestamp) <= options.endTime!;
+        });
       }
       
       // Sort by timestamp (newest first)
-      filteredEvents.sort((a, b) => 
-        new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime());
+      filteredEvents.sort((a, b) => {
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return bTime - aTime;
+      });
       
       // Apply limit if specified
       if (options.limit && options.limit > 0) {
@@ -163,8 +170,8 @@ export class SecurityAuditLogger {
       }
       
       return filteredEvents;
-    } catch (error) {
-      this.logger.error('Failed to retrieve security events', { error: error.message });
+    } catch (error: unknown) {
+      this.logger.error('Failed to retrieve security events', { error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }

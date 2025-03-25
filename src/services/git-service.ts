@@ -38,14 +38,16 @@ export class GitService {
         output: output.trim(),
         exitCode: 0
       };
-    } catch (error) {
-      this.logger.error(`Git command failed: ${command}`, { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Git command failed: ${command}`, { error: errorMessage });
       
-      if (error.stderr) {
-        this.logger.debug(`Git stderr: ${error.stderr}`);
+      if (error instanceof Error && 'stderr' in error) {
+        const stderr = (error as any).stderr;
+        this.logger.debug(`Git stderr: ${stderr}`);
       }
       
-      throw new Error(`Git command failed: ${error.message}`);
+      throw new Error(`Git command failed: ${errorMessage}`);
     }
   }
 

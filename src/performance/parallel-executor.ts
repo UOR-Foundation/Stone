@@ -113,11 +113,12 @@ export class ParallelExecutor {
           
           resolve(result);
           return result;
-        } catch (error) {
+        } catch (error: unknown) {
           const duration = Date.now() - startTime;
           this.failedCount++;
           
-          this.logger.error(`Task ${id} failed after ${duration}ms`, { error: error.message });
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          this.logger.error(`Task ${id} failed after ${duration}ms`, { error: errorMessage });
           
           reject(error);
           throw error;
@@ -165,11 +166,11 @@ export class ParallelExecutor {
           });
           
           return result;
-        } catch (error) {
+        } catch (error: unknown) {
           results.push({
             id,
             success: false,
-            error,
+            error: error instanceof Error ? error : new Error(String(error)),
             duration: Date.now() - startTime
           });
         }
@@ -275,7 +276,7 @@ export class ParallelExecutor {
     try {
       this.logger.debug(`Executing task ${task.id}`);
       await task.execute();
-    } catch (error) {
+    } catch (error: unknown) {
       // Error is already logged in the task wrapper
       // and the promise is already rejected
     }
