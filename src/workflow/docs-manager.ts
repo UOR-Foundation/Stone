@@ -85,7 +85,7 @@ export class DocsManager {
         pull_number: prNumber,
       });
       
-      const changedFiles = prFiles.data.map(file => file.filename);
+      const changedFiles = prFiles.data.map((file: { filename: string }) => file.filename);
       
       // Generate documentation from code
       const generatedDocs = await this.generateFromCode(changedFiles);

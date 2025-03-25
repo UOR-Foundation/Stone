@@ -67,6 +67,7 @@ export interface StoneConfig {
   repository: {
     owner: string;
     name: string;
+    path?: string;
   };
   packages: Array<{
     name: string;
@@ -92,6 +93,33 @@ export interface StoneConfig {
     maxComplexity: number;
     qualityChecks: string[];
   };
+  branches?: {
+    main: string;
+    prefix: string;
+  };
+  documentation?: {
+    directory: string;
+    apiDocsDirectory: string;
+    readmeFile: string;
+  };
+  errorRecovery?: {
+    includeStackTrace: boolean;
+    retryAttempts: number;
+    notifyOnError: boolean;
+    errorTypes: Record<string, string>;
+  };
+  feedback?: {
+    priorityLabels: {
+      high: string;
+      medium: string;
+      low: string;
+    };
+    categories: string[];
+  };
+  teams?: Array<{
+    name: string;
+    areas?: string[];
+  }>;
   roles: {
     pm: {
       enabled: boolean;
