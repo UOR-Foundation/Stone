@@ -3,11 +3,20 @@ import { GitHubClient } from '../github/client';
 import { RoleManager } from './roles/role-manager';
 import { Logger } from '../utils/logger';
 
+/**
+ * Role information
+ */
+export interface RoleInfo {
+  name: string;
+  permissions: string[];
+}
+
 export class RoleOrchestrator {
   private roleManager: RoleManager;
   private githubClient: GitHubClient | null = null;
   private config: StoneConfig | null = null;
   private logger: Logger;
+  private currentRole: RoleInfo | null = null;
   
   constructor(private token: string) {
     this.roleManager = new RoleManager();
@@ -25,6 +34,30 @@ export class RoleOrchestrator {
     }
   }
   
+  /**
+   * Get the token being used for GitHub API access
+   * @returns The GitHub API token
+   */
+  public getToken(): string {
+    return this.token;
+  }
+
+  /**
+   * Get information about the current role
+   * @returns Information about the current role
+   */
+  public async getCurrentRole(): Promise<RoleInfo> {
+    // If no role is set, use a default role
+    if (!this.currentRole) {
+      this.currentRole = {
+        name: 'system',
+        permissions: ['workflow:execute:*']
+      };
+    }
+    
+    return this.currentRole;
+  }
+
   /**
    * Process an issue based on its Stone labels
    */
@@ -51,8 +84,9 @@ export class RoleOrchestrator {
       await this.roleManager.processIssue(issueNumber, currentLabel);
       
       this.logger.success(`Successfully processed issue #${issueNumber}`);
-    } catch (error) {
-      this.logger.error(`Error processing issue #${issueNumber}: ${error instanceof Error ? error.message : String(error)}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error processing issue #${issueNumber}: ${errorMessage}`);
       throw error;
     }
   }
@@ -75,10 +109,95 @@ export class RoleOrchestrator {
       await this.roleManager.processIssue(issueNumber, label);
       
       this.logger.success(`Successfully processed issue #${issueNumber}`);
-    } catch (error) {
-      this.logger.error(`Error processing issue #${issueNumber} with label ${label}: ${error instanceof Error ? error.message : String(error)}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error processing issue #${issueNumber} with label ${label}: ${errorMessage}`);
       throw error;
     }
+  }
+  
+  /**
+   * Process an issue with the PM role
+   */
+  public async processWithPMRole(issueNumber: number): Promise<void> {
+    this.currentRole = {
+      name: 'pm',
+      permissions: [
+        'repository:read',
+        'docs:write',
+        'issues:write',
+        'pr:write',
+        'workflow:execute:*'
+      ]
+    };
+    
+    await this.processIssueWithLabel(issueNumber, 'stone-process');
+  }
+
+  /**
+   * Process an issue with the QA role
+   */
+  public async processWithQARole(issueNumber: number): Promise<void> {
+    this.currentRole = {
+      name: 'qa',
+      permissions: [
+        'repository:read',
+        'tests:write',
+        'benchmarks:write',
+        'test-utils:write',
+        'workflow:execute:*'
+      ]
+    };
+    
+    await this.processIssueWithLabel(issueNumber, 'stone-qa');
+  }
+
+  /**
+   * Process an issue with the Feature role
+   */
+  public async processWithFeatureRole(issueNumber: number): Promise<void> {
+    this.currentRole = {
+      name: 'feature',
+      permissions: [
+        'repository:read',
+        'src:write',
+        'workflow:execute:*'
+      ]
+    };
+    
+    await this.processIssueWithLabel(issueNumber, 'stone-feature-implement');
+  }
+
+  /**
+   * Process an issue with the Auditor role
+   */
+  public async processWithAuditorRole(issueNumber: number): Promise<void> {
+    this.currentRole = {
+      name: 'auditor',
+      permissions: [
+        'repository:read',
+        'issues:write',
+        'workflow:execute:*'
+      ]
+    };
+    
+    await this.processIssueWithLabel(issueNumber, 'stone-audit');
+  }
+
+  /**
+   * Process an issue with the Actions role
+   */
+  public async processWithActionsRole(issueNumber: number): Promise<void> {
+    this.currentRole = {
+      name: 'actions',
+      permissions: [
+        'repository:read',
+        'github-actions:write',
+        'workflow:execute:*'
+      ]
+    };
+    
+    await this.processIssueWithLabel(issueNumber, 'stone-actions');
   }
   
   /**
@@ -132,8 +251,9 @@ export class RoleOrchestrator {
       }
       
       return stoneLabels;
-    } catch (error) {
-      this.logger.error(`Error getting Stone labels for issue #${issueNumber}: ${error instanceof Error ? error.message : String(error)}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error getting Stone labels for issue #${issueNumber}: ${errorMessage}`);
       throw error;
     }
   }
