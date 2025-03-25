@@ -186,3 +186,27 @@ export {
   WebhookHandler,
   CIPipeline
 };
+
+// Export security components
+export {
+  TokenManager,
+  AccessControlManager,
+  SensitiveDataFilter,
+  SecurityAuditLogger
+} from './security';
+
+// Export performance components
+export {
+  RateLimiter,
+  RequestBatcher,
+  ParallelExecutor,
+  PerformanceMonitor
+} from './performance';
+
+// Export scalability components
+export {
+  RepositoryOptimizer,
+  MultiRepositoryManager,
+  WorkflowDistributor,
+  ResourceController
+} from './scalability';
