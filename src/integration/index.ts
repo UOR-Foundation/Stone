@@ -1,7 +1,11 @@
-import { ExternalToolIntegration, ExternalTool, ToolExecutionContext } from './external-tool';
-import { ExtensionAPI, APIEndpoint, APIRequest, APIResponse, APIMiddleware } from './api';
-import { NotificationSystem, NotificationChannel, Notification } from './notification';
-import { DataExchangeManager, DataExporter, DataImporter } from './data-exchange';
+import { ExternalToolIntegration } from './external-tool';
+import type { ExternalTool, ToolExecutionContext } from './external-tool';
+import { ExtensionAPI } from './api';
+import type { APIEndpoint, APIRequest, APIResponse, APIMiddleware } from './api';
+import { NotificationSystem } from './notification';
+import type { NotificationChannel, Notification } from './notification';
+import { DataExchangeManager } from './data-exchange';
+import type { DataExporter, DataImporter } from './data-exchange';
 
 /**
  * Integration module that exports all integration-related components
@@ -9,23 +13,27 @@ import { DataExchangeManager, DataExporter, DataImporter } from './data-exchange
 export {
   // External tool integration
   ExternalToolIntegration,
-  ExternalTool,
-  ToolExecutionContext,
   
   // API for third-party extensions
   ExtensionAPI,
+  
+  // Notification system
+  NotificationSystem,
+  
+  // Data exchange
+  DataExchangeManager
+};
+
+// Export types
+export type {
+  ExternalTool,
+  ToolExecutionContext,
   APIEndpoint,
   APIRequest,
   APIResponse,
   APIMiddleware,
-  
-  // Notification system
-  NotificationSystem,
   NotificationChannel,
   Notification,
-  
-  // Data exchange
-  DataExchangeManager,
   DataExporter,
   DataImporter
 };

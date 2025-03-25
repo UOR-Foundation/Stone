@@ -105,8 +105,9 @@ export class ExternalToolIntegration {
           try {
             const result = tool.parseOutput(stdout);
             resolve(result);
-          } catch (error) {
-            reject(new Error(`Failed to parse tool output: ${error.message}`));
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            reject(new Error(`Failed to parse tool output: ${errorMessage}`));
           }
         } else {
           reject(new Error(`Tool execution failed with code ${code}: ${stderr}`));
@@ -114,7 +115,7 @@ export class ExternalToolIntegration {
       });
 
       // Handle process errors
-      childProcess.on('error', (error) => {
+      childProcess.on('error', (error: Error) => {
         reject(new Error(`Failed to execute tool: ${error.message}`));
       });
     });

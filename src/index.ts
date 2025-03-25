@@ -226,11 +226,8 @@ export {
 } from './extension';
 
 // Export template components
-export {
-  TemplateSystem,
-  Template,
-  TemplateVariable
-} from './templates';
+export { TemplateSystem } from './templates';
+export type { Template, TemplateVariable } from './templates';
 
 // Export integration components
 export {

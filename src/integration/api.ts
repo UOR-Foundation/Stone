@@ -108,10 +108,11 @@ export class ExtensionAPI {
 
     try {
       return await handlerFn(currentRequest);
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       return {
         status: 500,
-        body: { error: `Internal server error: ${error.message}` }
+        body: { error: `Internal server error: ${errorMessage}` }
       };
     }
   }
