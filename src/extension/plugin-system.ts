@@ -47,8 +47,9 @@ export class PluginLoader {
       // Dynamic import for Node.js
       const plugin = require(pluginPath);
       return plugin;
-    } catch (error) {
-      throw new Error(`Failed to load plugin from ${pluginPath}: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load plugin from ${pluginPath}: ${errorMessage}`);
     }
   }
 
@@ -70,8 +71,9 @@ export class PluginLoader {
           const pluginPath = path.join(pluginDir, file);
           const plugin = this.loadPlugin(pluginPath);
           plugins.push(plugin);
-        } catch (error) {
-          console.error(`Error loading plugin ${file}: ${error.message}`);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Error loading plugin ${file}: ${errorMessage}`);
         }
       }
     }
@@ -150,8 +152,9 @@ export class PluginSystem {
       if (hook) {
         try {
           results.push(hook.handler(...args));
-        } catch (error) {
-          console.error(`Error executing hook "${hookName}" in plugin "${plugin.name}": ${error.message}`);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Error executing hook "${hookName}" in plugin "${plugin.name}": ${errorMessage}`);
         }
       }
     }
@@ -186,8 +189,9 @@ export class PluginManager {
       const plugin = require(pluginPath);
       this.pluginSystem.registerPlugin(plugin);
       this.enablePlugin(plugin.name);
-    } catch (error) {
-      throw new Error(`Failed to install plugin from ${pluginPath}: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to install plugin from ${pluginPath}: ${errorMessage}`);
     }
   }
 

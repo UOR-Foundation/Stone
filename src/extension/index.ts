@@ -1,6 +1,10 @@
-import { PluginSystem, PluginLoader, PluginManager, Plugin } from './plugin-system';
-import { CustomRoleRegistry, CustomRole } from './custom-role';
-import { WorkflowCustomizer, WorkflowExtensionPoint, CustomWorkflowStep } from './workflow-customization';
+import { PluginSystem, PluginLoader, PluginManager } from './plugin-system';
+import type { Plugin } from './plugin-system';
+import { CustomRoleRegistry } from './custom-role';
+import type { CustomRole } from './custom-role';
+import { WorkflowCustomizer } from './workflow-customization';
+import type { WorkflowExtensionPoint, CustomWorkflowStep } from './workflow-customization';
+import { ExtensionManager } from './extension-manager';
 
 /**
  * Extension system module that exports all extension-related components
@@ -10,17 +14,19 @@ export {
   PluginSystem,
   PluginLoader,
   PluginManager,
-  Plugin,
   
   // Custom role system
   CustomRoleRegistry,
-  CustomRole,
   
   // Workflow customization
   WorkflowCustomizer,
-  WorkflowExtensionPoint,
-  CustomWorkflowStep
+  
+  // Extension manager
+  ExtensionManager
 };
+
+// Export types
+export type { Plugin, CustomRole, WorkflowExtensionPoint, CustomWorkflowStep };
 
 /**
  * Default export of the extension system

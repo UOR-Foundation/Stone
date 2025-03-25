@@ -115,8 +115,9 @@ export class WorkflowCustomizer {
         const inputContext = { ...currentContext };
         // Execute step with the input context, not the original context
         currentContext = await step.execute(inputContext);
-      } catch (error) {
-        console.error(`Error executing step "${step.id}" at extension point "${extensionPointId}": ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Error executing step "${step.id}" at extension point "${extensionPointId}": ${errorMessage}`);
       }
     }
 
