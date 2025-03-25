@@ -1,13 +1,11 @@
-import { TemplateSystem, Template, TemplateVariable } from './template-system';
+import { TemplateSystem } from './template-system';
+import type { Template, TemplateVariable } from './template-system';
 
 /**
  * Templates module that exports all template-related components
  */
-export {
-  TemplateSystem,
-  Template,
-  TemplateVariable
-};
+export { TemplateSystem };
+export type { Template, TemplateVariable };
 
 /**
  * Default export of the templates system

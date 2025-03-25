@@ -53,8 +53,9 @@ export class TemplateSystem {
       
       this.registerTemplate(template);
       return template;
-    } catch (error) {
-      throw new Error(`Failed to load template from ${filePath}: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load template from ${filePath}: ${errorMessage}`);
     }
   }
 

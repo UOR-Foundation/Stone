@@ -71,8 +71,9 @@ export class NotificationSystem {
     for (const [id, channel] of this.channels.entries()) {
       try {
         results[id] = await channel.send(notification);
-      } catch (error) {
-        console.error(`Error sending notification to channel "${id}": ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Error sending notification to channel "${id}": ${errorMessage}`);
         results[id] = false;
       }
     }
