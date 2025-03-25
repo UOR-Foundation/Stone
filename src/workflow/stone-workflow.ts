@@ -3,6 +3,7 @@ import { StoneConfig } from '../config';
 import { Logger } from '../utils/logger';
 import { LoggerService } from '../services/logger-service';
 import { FileSystemService } from '../services/filesystem-service';
+import { GitService } from '../services/git-service';
 import { RoleOrchestrator } from '../claude/orchestrator';
 
 // Import conflict resolution and feedback handler
@@ -34,10 +35,13 @@ export class StoneWorkflow {
     this.fsService = new FileSystemService(loggerService);
     this.roleOrchestrator = new RoleOrchestrator(this.client.getToken());
     
+    // Initialize git service
+    const gitService = new GitService(loggerService);
+    
     // Initialize workflow components
-    this.conflictResolution = new ConflictResolution(this.client, this.config, loggerService);
+    this.conflictResolution = new ConflictResolution(this.client, this.config, loggerService, gitService);
     this.feedbackHandler = new FeedbackHandler(this.client, this.config, loggerService);
-    this.docsManager = new DocsManager(this.client, this.config, loggerService);
+    this.docsManager = new DocsManager(this.client, this.config, loggerService, this.fsService);
     this.errorRecovery = new ErrorRecovery(this.client, this.config, loggerService);
   }
   
