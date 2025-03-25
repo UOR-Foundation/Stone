@@ -7,8 +7,11 @@ export {
   GitHubActionsIntegration,
   WorkflowGenerator,
   WebhookHandler,
-  CIPipeline,
-  // Export interfaces
+  CIPipeline
+};
+
+// Export types
+export type {
   TestResult,
   TestPipelineResult,
   BuildResult,

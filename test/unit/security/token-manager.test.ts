@@ -1,5 +1,4 @@
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+// Using Jest for testing
 import sinon from 'sinon';
 import { TokenManager } from '../../../src/security/token-manager';
 import { FileSystemService } from '../../../src/services/filesystem-service';
@@ -20,6 +19,15 @@ describe('TokenManager', () => {
     };
 
     tokenManager = new TokenManager(fsServiceStub, loggerStub);
+    
+    // Mock the initialization of the TokenManager
+    fsServiceStub.ensureDirectoryExists.resolves();
+    fsServiceStub.fileExists.resolves(true);
+    fsServiceStub.readFile.resolves('0'.repeat(64)); // Mock a valid hex master key
+    
+    // Initialize the TokenManager with a master key for testing
+    // @ts-ignore - Accessing private property for testing
+    tokenManager.masterKey = Buffer.from('0'.repeat(64), 'hex');
   });
 
   describe('storeToken', () => {
@@ -29,10 +37,10 @@ describe('TokenManager', () => {
       const token = 'github_pat_123456789';
       await tokenManager.storeToken(token, 'github');
       
-      expect(fsServiceStub.writeFile.calledOnce).to.be.true;
-      expect(fsServiceStub.writeFile.firstCall.args[0]).to.include('.stone/secure/github_token');
+      expect(fsServiceStub.writeFile.calledOnce).toBe(true);
+      expect(fsServiceStub.writeFile.firstCall.args[0]).toContain('.stone/secure/github_token');
       // Check that it's not storing the raw token
-      expect(fsServiceStub.writeFile.firstCall.args[1]).to.not.include(token);
+      expect(fsServiceStub.writeFile.firstCall.args[1]).not.toContain(token);
     });
 
     it('should throw error if unable to store token', async () => {
@@ -45,7 +53,7 @@ describe('TokenManager', () => {
         // Should not reach here
         expect.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Failed to store token');
+        expect(error.message).toContain('Failed to store token');
       }
     });
   });
@@ -57,19 +65,20 @@ describe('TokenManager', () => {
       
       const token = await tokenManager.retrieveToken('github');
       
-      expect(token).to.equal('github_pat_123456789');
-      expect(fsServiceStub.readFile.calledOnce).to.be.true;
+      expect(token).toEqual('github_pat_123456789');
+      expect(fsServiceStub.readFile.calledOnce).toBe(true);
     });
 
     it('should throw error if token does not exist', async () => {
-      fsServiceStub.readFile.rejects(new Error('File not found'));
+      // Set fileExists to return false to trigger the token not found error
+      fsServiceStub.fileExists.resolves(false);
       
       try {
         await tokenManager.retrieveToken('github');
         // Should not reach here
         expect.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).to.include('Token not found');
+        expect(error.message).toContain('Token not found');
       }
     });
   });
@@ -87,9 +96,9 @@ describe('TokenManager', () => {
         return Promise.resolve('github_pat_new');
       });
       
-      expect(newToken).to.equal('github_pat_new');
-      expect(fsServiceStub.readFile.calledOnce).to.be.true;
-      expect(fsServiceStub.writeFile.calledOnce).to.be.true;
+      expect(newToken).toEqual('github_pat_new');
+      expect(fsServiceStub.readFile.calledOnce).toBe(true);
+      expect(fsServiceStub.writeFile.calledOnce).toBe(true);
     });
   });
 
@@ -102,9 +111,9 @@ describe('TokenManager', () => {
       
       const isValid = await tokenManager.validateToken(token, validationFunction);
       
-      expect(isValid).to.be.true;
-      expect(validationFunction.calledOnce).to.be.true;
-      expect(validationFunction.firstCall.args[0]).to.equal(token);
+      expect(isValid).toBe(true);
+      expect(validationFunction.calledOnce).toBe(true);
+      expect(validationFunction.firstCall.args[0]).toEqual(token);
     });
 
     it('should return false for invalid tokens', async () => {
@@ -115,8 +124,8 @@ describe('TokenManager', () => {
       
       const isValid = await tokenManager.validateToken(token, validationFunction);
       
-      expect(isValid).to.be.false;
-      expect(validationFunction.calledOnce).to.be.true;
+      expect(isValid).toBe(false);
+      expect(validationFunction.calledOnce).toBe(true);
     });
   });
 
@@ -127,12 +136,12 @@ describe('TokenManager', () => {
       const encryptedText = tokenManager.encrypt(originalText);
       
       // Encrypted text should be different from original
-      expect(encryptedText).to.not.equal(originalText);
+      expect(encryptedText).not.toEqual(originalText);
       
       const decryptedText = tokenManager.decrypt(encryptedText);
       
       // Decrypted text should match the original
-      expect(decryptedText).to.equal(originalText);
+      expect(decryptedText).toEqual(originalText);
     });
   });
 });

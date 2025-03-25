@@ -1,9 +1,7 @@
-// Using explicit import because Chai is an ESM module
-import { expect as chaiExpect } from 'chai';
-import sinon from 'sinon';
+// Basic Jest testing setup
+const sinon = require('sinon');
 
-// Setup global objects for test compatibility
-global.expect = chaiExpect;
+// Setup global testing objects
 global.sinon = sinon;
 
 // Set up test environment variables

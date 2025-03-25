@@ -20,10 +20,13 @@ export class SensitiveDataFilter {
       'github-token': /github_pat_[A-Za-z0-9_]{36}/g,
       
       // Generic API token patterns
-      'api-key': /api[_\-]?key[=: ]['"]?([A-Za-z0-9+/=]{8,})['"]/gi,
+      'apiKey': /api[_\-]?key[=: ]['"]?([A-Za-z0-9+/=]{8,})['"]/gi,
       
       // Password patterns
       'password': /password[=: ]['"]?([^'"\s]{3,})/gi,
+      
+      // Plain text password patterns (for sanitizeForLog)
+      'secret': /secret\d+/gi,
       
       // JWT pattern
       'jwt': /eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/g,

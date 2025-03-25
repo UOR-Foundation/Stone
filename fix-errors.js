@@ -1,49 +1,51 @@
+/**
+ * Script to fix the Jest configuration error 
+ * "Option: extensionsToTreatAsEsm: ['.ts', '.tsx', '.mjs'] includes '.mjs' which is always treated as an ECMAScript Module."
+ */
+
 const fs = require('fs');
 const path = require('path');
 
-// Directories to process
-const dirs = [
-  './src/security',
-  './src/performance',
-  './src/scalability',
-  './src/services'
-];
+const jestConfigPath = path.join(__dirname, 'jest.config.js');
 
-// Regular expression to find error handlers
-const errorPattern = /catch\s*\(\s*error\s*\)\s*\{([^}]*?)error\.message/g;
-const fixedPattern = 'catch (error: unknown) {$1error instanceof Error ? error.message : String(error)';
+// Read the current configuration
+let config = fs.readFileSync(jestConfigPath, 'utf8');
 
-// Function to process files in a directory
-function processDirectory(dir) {
-  const files = fs.readdirSync(dir);
+// Check if extensionsToTreatAsEsm includes '.mjs'
+if (config.includes("extensionsToTreatAsEsm")) {
+  console.log('Found extensionsToTreatAsEsm in jest.config.js');
   
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stats = fs.statSync(filePath);
+  // Remove the entire extensionsToTreatAsEsm line if it includes '.mjs'
+  if (config.includes("'.mjs'")) {
+    console.log('Found .mjs in extensionsToTreatAsEsm, removing it');
+    config = config.replace(/\s*extensionsToTreatAsEsm:.*\],/g, '');
     
-    if (stats.isDirectory()) {
-      processDirectory(filePath);
-    } else if (file.endsWith('.ts')) {
-      fixErrorsInFile(filePath);
-    }
-  });
-}
-
-// Function to fix errors in a file
-function fixErrorsInFile(filePath) {
-  console.log(`Processing ${filePath}`);
-  let content = fs.readFileSync(filePath, 'utf8');
-  
-  // Replace catch (error) with catch (error: unknown) and handle error.message safely
-  let newContent = content.replace(errorPattern, fixedPattern);
-  
-  if (content !== newContent) {
-    fs.writeFileSync(filePath, newContent);
-    console.log(`  Updated ${filePath}`);
+    // Save the updated configuration
+    fs.writeFileSync(jestConfigPath, config, 'utf8');
+    console.log('Successfully updated jest.config.js');
   } else {
-    console.log(`  No changes to ${filePath}`);
+    console.log('No .mjs found in extensionsToTreatAsEsm');
   }
+} else {
+  console.log('No extensionsToTreatAsEsm found in jest.config.js');
 }
 
-// Process all directories
-dirs.forEach(processDirectory);
+// Verify the test setup file exists
+const setupPath = path.join(__dirname, 'test', 'setup.js');
+if (fs.existsSync(setupPath)) {
+  console.log('Test setup file exists at ' + setupPath);
+} else {
+  console.log('Test setup file not found at ' + setupPath);
+  // Create a basic setup file if it doesn't exist
+  fs.writeFileSync(setupPath, `// Basic Jest testing setup
+const sinon = require('sinon');
+
+// Setup global testing objects
+global.sinon = sinon;
+
+// Set up test environment variables
+process.env.NODE_ENV = 'test';`, 'utf8');
+  console.log('Created basic test setup file');
+}
+
+console.log('Fix complete!');

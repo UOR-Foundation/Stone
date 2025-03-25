@@ -150,7 +150,23 @@ export class AccessControlManager {
 
     // Using micromatch to check if the file path matches any of the patterns
     // This supports both inclusion and exclusion patterns (with ! prefix)
-    return micromatch.isMatch(filePath, patterns);
+    const isMatch = micromatch.isMatch(filePath, patterns);
+    
+    // Specifically check for exclusion patterns that might match this file
+    const exclusionPatterns = patterns.filter(p => p.startsWith('!'));
+    if (exclusionPatterns.length > 0) {
+      // If there are exclusion patterns, check each one
+      for (const pattern of exclusionPatterns) {
+        // Remove the '!' prefix for matching
+        const exclusionPattern = pattern.substring(1);
+        if (micromatch.isMatch(filePath, exclusionPattern)) {
+          // If an exclusion pattern matches, deny access
+          return false;
+        }
+      }
+    }
+    
+    return isMatch;
   }
 
   /**

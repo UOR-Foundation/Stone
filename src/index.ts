@@ -166,9 +166,8 @@ export async function runWorkflow(
   }
 }
 
-// Export core types and classes
+// Export core classes
 export { 
-  StoneConfig,
   ClaudeClient,
   ContextProvider,
   ResponseParser,
@@ -185,6 +184,11 @@ export {
   WorkflowGenerator,
   WebhookHandler,
   CIPipeline
+};
+
+// Export core types
+export type {
+  StoneConfig
 };
 
 // Export security components
