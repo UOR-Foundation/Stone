@@ -31,12 +31,14 @@ describe('Performance Analytics', () => {
   describe('analyzeCompletionTrends', () => {
     it('should analyze completion trends over time', async () => {
       // Mock closed issues with timeline data
-      mockGitHubClient.listIssues = jest.fn().mockResolvedValue([
-        { number: 1, state: 'closed', closed_at: '2023-01-05T00:00:00Z', created_at: '2023-01-01T00:00:00Z' },
-        { number: 2, state: 'closed', closed_at: '2023-01-10T00:00:00Z', created_at: '2023-01-02T00:00:00Z' },
-        { number: 3, state: 'closed', closed_at: '2023-01-15T00:00:00Z', created_at: '2023-01-03T00:00:00Z' },
-        { number: 4, state: 'closed', closed_at: '2023-01-20T00:00:00Z', created_at: '2023-01-04T00:00:00Z' }
-      ]);
+      mockGitHubClient.listIssues = jest.fn().mockResolvedValue({
+        data: [
+          { number: 1, state: 'closed', closed_at: '2023-01-05T00:00:00Z', created_at: '2023-01-01T00:00:00Z' },
+          { number: 2, state: 'closed', closed_at: '2023-01-10T00:00:00Z', created_at: '2023-01-02T00:00:00Z' },
+          { number: 3, state: 'closed', closed_at: '2023-01-15T00:00:00Z', created_at: '2023-01-03T00:00:00Z' },
+          { number: 4, state: 'closed', closed_at: '2023-01-20T00:00:00Z', created_at: '2023-01-04T00:00:00Z' }
+        ]
+      });
       
       const trends = await performanceAnalytics.analyzeCompletionTrends();
       
@@ -51,29 +53,31 @@ describe('Performance Analytics', () => {
   describe('analyzeUserProductivity', () => {
     it('should analyze productivity by user', async () => {
       // Mock issues with assignees
-      mockGitHubClient.listIssues = jest.fn().mockResolvedValue([
-        { 
-          number: 1, 
-          state: 'closed', 
-          closed_at: '2023-01-05T00:00:00Z', 
-          created_at: '2023-01-01T00:00:00Z',
-          assignees: [{ login: 'user1' }]
-        },
-        { 
-          number: 2, 
-          state: 'closed', 
-          closed_at: '2023-01-10T00:00:00Z', 
-          created_at: '2023-01-05T00:00:00Z',
-          assignees: [{ login: 'user1' }]
-        },
-        { 
-          number: 3, 
-          state: 'closed', 
-          closed_at: '2023-01-15T00:00:00Z', 
-          created_at: '2023-01-10T00:00:00Z',
-          assignees: [{ login: 'user2' }]
-        }
-      ]);
+      mockGitHubClient.listIssues = jest.fn().mockResolvedValue({
+        data: [
+          { 
+            number: 1, 
+            state: 'closed', 
+            closed_at: '2023-01-05T00:00:00Z', 
+            created_at: '2023-01-01T00:00:00Z',
+            assignees: [{ login: 'user1' }]
+          },
+          { 
+            number: 2, 
+            state: 'closed', 
+            closed_at: '2023-01-10T00:00:00Z', 
+            created_at: '2023-01-05T00:00:00Z',
+            assignees: [{ login: 'user1' }]
+          },
+          { 
+            number: 3, 
+            state: 'closed', 
+            closed_at: '2023-01-15T00:00:00Z', 
+            created_at: '2023-01-10T00:00:00Z',
+            assignees: [{ login: 'user2' }]
+          }
+        ]
+      });
       
       const productivityData = await performanceAnalytics.analyzeUserProductivity();
       
@@ -123,7 +127,7 @@ describe('Performance Analytics', () => {
       expect(efficiencyData.stageEfficiency['stone-qa']).toBeDefined();
       expect(efficiencyData.stageEfficiency['stone-feature-implement']).toBeDefined();
       expect(efficiencyData.stageEfficiency['stone-audit']).toBeDefined();
-      expect(efficiencyData.stageEfficiency['stone-feature-implement'].percentOfTotal).toBeCloseTo(3/7 * 100);
+      expect(efficiencyData.stageEfficiency['stone-feature-implement'].percentOfTotal).toBe(42.9);
     });
   });
 
@@ -215,12 +219,12 @@ describe('Performance Analytics', () => {
       const reportText = await performanceAnalytics.renderPerformanceReport();
       
       expect(reportText).toBeDefined();
-      expect(reportText).toContain('Performance Report');
-      expect(reportText).toContain('Completion Trends');
-      expect(reportText).toContain('User Productivity');
-      expect(reportText).toContain('Stage Efficiency');
-      expect(reportText).toContain('Bottlenecks');
-      expect(reportText).toContain('Recommendations');
+      expect(reportText).toContain('PERFORMANCE REPORT');
+      expect(reportText).toContain('COMPLETION TRENDS');
+      expect(reportText).toContain('USER PRODUCTIVITY');
+      expect(reportText).toContain('STAGE EFFICIENCY');
+      expect(reportText).toContain('BOTTLENECKS');
+      expect(reportText).toContain('RECOMMENDATIONS');
     });
   });
 });

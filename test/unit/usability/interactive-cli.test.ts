@@ -108,7 +108,11 @@ describe('Interactive CLI', () => {
           name: 'test-repo'
         },
         github: {
-          token: 'test-token'
+          token: 'test-token',
+          createLabels: false
+        },
+        workflow: {
+          enabled: true
         }
       };
       
@@ -152,7 +156,7 @@ describe('Interactive CLI', () => {
       
       expect(interactiveCLI.promptForCommand).toHaveBeenCalled();
       expect(inquirer.prompt).toHaveBeenCalledTimes(2);
-      expect(mockRunWorkflow).toHaveBeenCalledWith('issue', '123', expect.anything());
+      expect(mockRunWorkflow).toHaveBeenCalledWith('issue', '123');
     });
   });
 

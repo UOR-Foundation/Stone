@@ -166,7 +166,7 @@ stone run issue <issue-number>
         sections.push({
           title: `${dirName} API`,
           content: `# ${dirName} API\n\n${classes.join('\n\n')}`,
-          filename: `api-${dirName.toLowerCase()}.md`
+          filename: `api-${dirName ? dirName.toLowerCase() : 'unknown'}.md`
         });
       }
     }

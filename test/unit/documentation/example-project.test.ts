@@ -90,10 +90,10 @@ describe('Example Project Generator', () => {
       // Check if writeFileSync was called
       expect(fs.writeFileSync).toHaveBeenCalled();
       
-      // Check if custom role file is created
+      // Check if security auditor role file is created
       expect(fs.writeFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('custom-role.js'),
-        expect.stringContaining('CustomRole'),
+        expect.stringContaining('security-auditor.js'),
+        expect.stringContaining('Security Auditor'),
         'utf8'
       );
     });

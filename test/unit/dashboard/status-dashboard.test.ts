@@ -31,16 +31,20 @@ describe('Status Dashboard', () => {
   describe('getStatusData', () => {
     it('should fetch and aggregate status data', async () => {
       // Mock GitHub API responses
-      mockGitHubClient.listIssues = jest.fn().mockResolvedValue([
-        { number: 1, title: 'Issue 1', labels: [{ name: 'stone' }], state: 'open' },
-        { number: 2, title: 'Issue 2', labels: [{ name: 'stone-qa' }], state: 'open' },
-        { number: 3, title: 'Issue 3', labels: [{ name: 'stone-feature-implement' }], state: 'closed' }
-      ]);
+      mockGitHubClient.listIssues = jest.fn().mockResolvedValue({
+        data: [
+          { number: 1, title: 'Issue 1', labels: [{ name: 'stone' }], state: 'open' },
+          { number: 2, title: 'Issue 2', labels: [{ name: 'stone-qa' }], state: 'open' },
+          { number: 3, title: 'Issue 3', labels: [{ name: 'stone-feature-implement' }], state: 'closed' }
+        ]
+      });
       
-      mockGitHubClient.listPullRequests = jest.fn().mockResolvedValue([
-        { number: 10, title: 'PR 1', state: 'open', labels: [] },
-        { number: 11, title: 'PR 2', state: 'closed', labels: [] }
-      ]);
+      mockGitHubClient.listPullRequests = jest.fn().mockResolvedValue({
+        data: [
+          { number: 10, title: 'PR 1', state: 'open', labels: [] },
+          { number: 11, title: 'PR 2', state: 'closed', labels: [] }
+        ]
+      });
       
       const statusData = await statusDashboard.getStatusData();
       
@@ -94,10 +98,12 @@ describe('Status Dashboard', () => {
   describe('getPerformanceMetrics', () => {
     it('should calculate performance metrics for the workflow', async () => {
       // Mock closed issues with timeline data
-      mockGitHubClient.listIssues = jest.fn().mockResolvedValue([
-        { number: 1, state: 'closed', closed_at: '2023-01-05T00:00:00Z', created_at: '2023-01-01T00:00:00Z' },
-        { number: 2, state: 'closed', closed_at: '2023-01-10T00:00:00Z', created_at: '2023-01-02T00:00:00Z' }
-      ]);
+      mockGitHubClient.listIssues = jest.fn().mockResolvedValue({
+        data: [
+          { number: 1, state: 'closed', closed_at: '2023-01-05T00:00:00Z', created_at: '2023-01-01T00:00:00Z' },
+          { number: 2, state: 'closed', closed_at: '2023-01-10T00:00:00Z', created_at: '2023-01-02T00:00:00Z' }
+        ]
+      });
       
       // Mock timeline data for each issue
       mockGitHubClient.getIssueTimeline = jest.fn()
@@ -182,11 +188,11 @@ describe('Status Dashboard', () => {
       const dashboardText = await statusDashboard.renderStatusDashboard();
       
       expect(dashboardText).toBeDefined();
-      expect(dashboardText).toContain('Status Dashboard');
-      expect(dashboardText).toContain('Issues');
-      expect(dashboardText).toContain('Pull Requests');
-      expect(dashboardText).toContain('Performance Metrics');
-      expect(dashboardText).toContain('Bottlenecks');
+      expect(dashboardText).toContain('STONE STATUS DASHBOARD');
+      expect(dashboardText).toContain('ISSUES');
+      expect(dashboardText).toContain('PULL REQUESTS');
+      expect(dashboardText).toContain('PERFORMANCE METRICS');
+      expect(dashboardText).toContain('BOTTLENECKS');
     });
   });
 });

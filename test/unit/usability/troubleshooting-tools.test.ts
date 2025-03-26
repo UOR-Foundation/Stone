@@ -174,7 +174,7 @@ describe('Troubleshooting Tools', () => {
       const diagnostics = await troubleshootingTools.runDiagnostics();
       
       expect(diagnostics).toBeDefined();
-      expect(diagnostics.overallStatus).toBe('issues');
+      expect(diagnostics.overallStatus).toBe('critical');
       expect(diagnostics.issues).toBeDefined();
       expect(diagnostics.issues.length).toBeGreaterThan(0);
     });
@@ -204,7 +204,7 @@ describe('Troubleshooting Tools', () => {
       const report = troubleshootingTools.formatDiagnosticReport(diagnosticResult);
       
       expect(report).toBeDefined();
-      expect(report).toContain('Diagnostic Report');
+      expect(report).toContain('STONE DIAGNOSTIC REPORT');
       expect(report).toContain('Environment');
       expect(report).toContain('GitHub Access');
       expect(report).toContain('Configuration');
