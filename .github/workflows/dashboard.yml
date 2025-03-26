@@ -1,9 +1,16 @@
 name: Deploy Dashboard
+# This workflow deploys the interactive Stone dashboard to GitHub Pages
+# It uses the fully-implemented dashboard from the repository's index.html file
 
 on:
   release:
     types: [created]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
 
 permissions:
   contents: read
@@ -21,202 +28,86 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Create dashboard file
+      - name: Prepare dashboard files
         run: |
           mkdir -p _site
           
-          # Create a basic HTML dashboard
-          cat > _site/index.html << 'ENDHTML'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stone Dashboard</title>
-  <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      line-height: 1.6;
-      color: #24292e;
-      background-color: #f6f8fa;
-    }
-    
-    .container { 
-      max-width: 1200px; 
-      margin: 0 auto; 
-      padding: 2rem; 
-    }
-    
-    header { 
-      background-color: #0366d6; 
-      padding: 1rem 0; 
-      text-align: center;
-      color: white;
-    }
-    
-    h1 { 
-      color: white; 
-      margin-bottom: 0.5rem;
-    }
-    
-    header p {
-      opacity: 0.9;
-      margin-top: 0;
-    }
-    
-    .card { 
-      background-color: white; 
-      border-radius: 5px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-      padding: 1.5rem; 
-      margin-bottom: 1.5rem; 
-    }
-    
-    .coming-soon { 
-      text-align: center; 
-      padding: 2rem; 
-      background-color: #f9f9f9; 
-      border-radius: 5px; 
-      margin: 2rem 0; 
-      border: 1px dashed #d1d5da;
-    }
-    
-    .coming-soon h2 {
-      color: #0366d6;
-    }
-    
-    a {
-      color: #0366d6;
-      text-decoration: none;
-    }
-    
-    a:hover {
-      text-decoration: underline;
-    }
-    
-    pre {
-      background-color: #f6f8fa;
-      padding: 1rem;
-      border-radius: 5px;
-      overflow-x: auto;
-      border: 1px solid #e1e4e8;
-    }
-    
-    .stats { 
-      display: flex; 
-      justify-content: space-between; 
-      margin: 2rem 0; 
-    }
-    
-    .stat-card { 
-      flex: 1; 
-      margin: 0 1rem; 
-      padding: 1.5rem; 
-      background-color: white; 
-      border-radius: 5px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-      text-align: center; 
-    }
-    
-    .stat-card:first-child {
-      margin-left: 0;
-    }
-    
-    .stat-card:last-child {
-      margin-right: 0;
-    }
-    
-    .stat-number { 
-      font-size: 2.5rem; 
-      font-weight: bold; 
-      color: #0366d6; 
-      margin-bottom: 0.5rem; 
-    }
-    
-    .stat-label { 
-      font-size: 1rem; 
-      color: #586069; 
-    }
-    
-    footer { 
-      background-color: #24292e; 
-      padding: 1rem 0; 
-      text-align: center; 
-      margin-top: 2rem;
-      color: #ffffff;
-    }
-    
-    footer a {
-      color: #79b8ff;
-    }
-    
-    @media (max-width: 768px) {
-      .stats {
-        flex-direction: column;
-      }
-      
-      .stat-card {
-        margin: 0.5rem 0;
-      }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="container">
-      <h1>Stone Dashboard</h1>
-      <p>A software factory for GitHub-based development using Claude Code</p>
-    </div>
-  </header>
-  
-  <div class="container">
-    <div class="card">
-      <h2>Welcome to Stone</h2>
-      <p>Stone is a structured system for orchestrating GitHub-based development using Claude Code. It manages the software development process through specialized roles, each with defined responsibilities and boundaries.</p>
-    </div>
-    
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number">5</div>
-        <div class="stat-label">AI Roles</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">8</div>
-        <div class="stat-label">Workflow Steps</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">3</div>
-        <div class="stat-label">Publishing Options</div>
-      </div>
-    </div>
-    
-    <div class="coming-soon">
-      <h2>Interactive Dashboard Coming Soon</h2>
-      <p>Our interactive dashboard with workflow visualization, metrics, and performance analytics is coming soon.</p>
-      <p>Check back for updates or visit our <a href="https://github.com/UOR-Foundation/Stone">GitHub repository</a> for more information.</p>
-    </div>
-    
-    <div class="card">
-      <h2>Getting Started</h2>
-      <pre>npm install --save-dev @uor-foundation/stone</pre>
-      <p>Initialize Stone in your repository:</p>
-      <pre>npx stone init</pre>
-    </div>
-  </div>
-  
-  <footer>
-    <div class="container">
-      <p>© 2025 UOR Foundation - <a href="https://github.com/UOR-Foundation/Stone">GitHub</a></p>
-    </div>
-  </footer>
-</body>
-</html>
-ENDHTML
+          # Copy the fully-implemented dashboard HTML to the site directory
+          cp index.html _site/index.html
+          
+          # Add a note to the deployed dashboard indicating its source
+          echo "<!-- This dashboard is deployed from the Stone repository's index.html file -->" >> _site/index.html
+          
+          # Update the title to indicate this is the live version
+          sed -i 's/<title>Stone Dashboard<\/title>/<title>Stone Dashboard - Live<\/title>/' _site/index.html
+          
+          # Create a simple README for the GitHub Pages site
+          cat > _site/README.md << 'ENDREADME'
+          # Stone Dashboard
+          
+          This is the live dashboard for the Stone project, a software factory for GitHub-based development using Claude Code.
+          
+          The dashboard provides real-time metrics and visualization of Stone workflows, helping you track progress and identify bottlenecks.
+          
+          For more information, visit the [Stone repository](https://github.com/UOR-Foundation/Stone).
+          ENDREADME
+          
+          # Create a simple 404 page
+          cat > _site/404.html << 'END404'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Page Not Found - Stone Dashboard</title>
+            <style>
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; 
+                margin: 0; 
+                padding: 0; 
+                line-height: 1.6;
+                color: #24292e;
+                background-color: #f6f8fa;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                text-align: center;
+              }
+              h1 { font-size: 3rem; margin-bottom: 1rem; }
+              p { margin-bottom: 2rem; }
+              a { 
+                color: #0366d6; 
+                text-decoration: none;
+                padding: 0.5rem 1rem;
+                border: 1px solid #0366d6;
+                border-radius: 4px;
+              }
+              a:hover { 
+                background-color: #0366d6;
+                color: white; 
+              }
+            </style>
+          </head>
+          <body>
+            <h1>404 - Page Not Found</h1>
+            <p>The page you are looking for does not exist.</p>
+            <a href="/">Return to Dashboard</a>
+          </body>
+          </html>
+          END404
+          
+          # Ensure all files have correct permissions
+          chmod -R 644 _site/*
       
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
