@@ -56,7 +56,7 @@ export class InteractiveCLI {
       }
     ];
     
-    const answers = await inquirer.prompt(questions);
+    const answers = await inquirer.prompt<{command: string}>(questions as any);
     return answers.command;
   }
 
@@ -97,7 +97,7 @@ export class InteractiveCLI {
       }
     ];
     
-    const answers = await inquirer.prompt(questions);
+    const answers = await inquirer.prompt<{[key: string]: any}>(questions as any);
     
     // Build config object
     return {
@@ -136,7 +136,7 @@ export class InteractiveCLI {
       }
     ];
     
-    const answers = await inquirer.prompt(questions);
+    const answers = await inquirer.prompt<{confirmed: boolean}>(questions as any);
     return answers.confirmed;
   }
 
@@ -204,7 +204,7 @@ export class InteractiveCLI {
         }
       ];
       
-      const answers = await inquirer.prompt(questions);
+      const answers = await inquirer.prompt<{issueNumber: string}>(questions as any);
       issueNumber = answers.issueNumber;
     }
     
@@ -283,10 +283,10 @@ export class InteractiveCLI {
     
     if (choice === 'detailed') {
       // Display detailed status
-      Object.entries(status).forEach(([key, value]) => {
-        if (typeof value === 'object') {
+      Object.entries(status || {}).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
           this.logger.info(`${key}:`);
-          Object.entries(value).forEach(([subKey, subValue]) => {
+          Object.entries(value as Record<string, any>).forEach(([subKey, subValue]) => {
             this.logger.info(`  ${subKey}: ${subValue}`);
           });
         } else {

@@ -86,4 +86,11 @@ export class ConfigGenerator {
       }
     }
   }
+
+  /**
+   * Write configuration to file
+   */
+  public async writeConfig(config: any): Promise<void> {
+    await this.configLoader.save(config);
+  }
 }

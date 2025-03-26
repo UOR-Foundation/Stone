@@ -95,7 +95,8 @@ export class PerformanceAnalytics {
     this.logger.info('Analyzing completion trends...');
     
     // Fetch closed issues
-    const closedIssues = await this.githubClient.listIssues({ state: 'closed' });
+    const closedIssuesResponse = await this.githubClient.listIssues('closed');
+    const closedIssues = closedIssuesResponse.data || [];
     
     // Group by week
     const weeklyData: Record<string, { count: number, times: number[] }> = {};
@@ -158,7 +159,8 @@ export class PerformanceAnalytics {
     this.logger.info('Analyzing user productivity...');
     
     // Fetch closed issues
-    const closedIssues = await this.githubClient.listIssues({ state: 'closed' });
+    const closedIssuesResponse = await this.githubClient.listIssues('closed');
+    const closedIssues = closedIssuesResponse.data || [];
     
     // Group by assignee
     const userStats: Record<string, UserProductivityStats> = {};

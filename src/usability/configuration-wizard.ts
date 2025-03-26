@@ -209,21 +209,21 @@ export class ConfigurationWizard {
       }
     ];
     
-    return inquirer.prompt(questions);
+    return inquirer.prompt<{owner: string; name: string}>(questions as any);
   }
 
   /**
    * Prompt for GitHub token
    */
   private async promptForGitHubToken(): Promise<string> {
-    const answer = await inquirer.prompt([
+    const answer = await inquirer.prompt<{token: string}>([
       {
         type: 'password',
         name: 'token',
         message: 'GitHub token:',
         validate: (input: string) => !!input || 'GitHub token is required'
       }
-    ]);
+    ] as any);
     
     return answer.token;
   }
@@ -253,7 +253,7 @@ export class ConfigurationWizard {
       }
     ];
     
-    return inquirer.prompt(questions);
+    return inquirer.prompt<{[key: string]: any}>(questions as any);
   }
 
   /**
@@ -281,7 +281,7 @@ export class ConfigurationWizard {
       }
     ];
     
-    return inquirer.prompt(questions);
+    return inquirer.prompt<{[key: string]: boolean}>(questions as any);
   }
 
   /**
@@ -309,7 +309,7 @@ export class ConfigurationWizard {
       }
     ];
     
-    return inquirer.prompt(questions);
+    return inquirer.prompt<{[key: string]: boolean}>(questions as any);
   }
 
   /**
@@ -330,7 +330,7 @@ export class ConfigurationWizard {
     }
     if (config.advanced) {
       this.logger.info('Advanced Settings:');
-      for (const [key, value] of Object.entries(config.advanced)) {
+      for (const [key, value] of Object.entries(config.advanced as Record<string, any>)) {
         this.logger.info(`  ${key}: ${value}`);
       }
     }
@@ -340,14 +340,14 @@ export class ConfigurationWizard {
    * Confirm configuration
    */
   private async confirmConfig(): Promise<boolean> {
-    const answer = await inquirer.prompt([
+    const answer = await inquirer.prompt<{confirmed: boolean}>([
       {
         type: 'confirm',
         name: 'confirmed',
         message: 'Save this configuration?',
         default: true
       }
-    ]);
+    ] as any);
     
     return answer.confirmed;
   }

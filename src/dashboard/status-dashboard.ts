@@ -123,8 +123,8 @@ export class StatusDashboard {
     // Determine current stage based on labels
     let currentLabel: string | undefined;
     const labelEvents = timeline
-      .filter(event => event.event === 'labeled')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .filter((event: any) => event.event === 'labeled')
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     if (labelEvents.length > 0 && labelEvents[0].label) {
       currentLabel = typeof labelEvents[0].label === 'string' 
@@ -173,8 +173,8 @@ export class StatusDashboard {
       
       // Extract label events to track stage transitions
       const labelEvents = timeline
-        .filter(event => event.event === 'labeled' || event.event === 'unlabeled')
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        .filter((event: any) => event.event === 'labeled' || event.event === 'unlabeled')
+        .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       
       // Calculate time spent in each stage
       let currentStage: string | null = null;
@@ -200,10 +200,12 @@ export class StatusDashboard {
         } else if (event.event === 'unlabeled' && labelName === currentStage) {
           // Record time in current stage
           const timeInStage = eventTime - stageStartTime;
-          if (!stageTimeData[currentStage]) {
+          if (currentStage && !stageTimeData[currentStage]) {
             stageTimeData[currentStage] = [];
           }
-          stageTimeData[currentStage].push(timeInStage);
+          if (currentStage) {
+            stageTimeData[currentStage].push(timeInStage);
+          }
           
           // Reset current stage
           currentStage = null;

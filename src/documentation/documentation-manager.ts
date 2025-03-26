@@ -2,6 +2,7 @@ import { ConfigLoader } from '../config/loader';
 import { Logger } from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
+// @ts-ignore
 import * as marked from 'marked';
 
 /**
@@ -205,7 +206,7 @@ stone run issue <issue-number>
    * Render documentation as HTML
    */
   public renderDocumentation(markdown: string): string {
-    return marked.parse(markdown);
+    return marked.parse(markdown) as string;
   }
 
   /**

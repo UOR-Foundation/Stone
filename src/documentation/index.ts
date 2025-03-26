@@ -4,23 +4,48 @@ import { ExampleProjectGenerator, ExampleProject, ExampleFile } from './example-
 
 export {
   DocumentationManager,
-  DocSection,
   QuickStartGuideGenerator,
+  ExampleProjectGenerator
+};
+
+export type {
+  DocSection,
   GuideSection,
-  ExampleProjectGenerator,
   ExampleProject,
   ExampleFile
 };
 
-// Re-export types
-export type { ApiDocOptions } from './documentation-manager';
-export type { DocumentSection } from './documentation-manager';
-export type { PageTemplate } from './documentation-manager';
+// Define types
+export interface ApiDocOptions {
+  className: string;
+  description: string;
+  methods: string[];
+}
 
-export type { QuickStartOptions } from './quick-start-guide';
-export type { GeneratedSection } from './quick-start-guide';
+export interface DocumentSection {
+  title: string;
+  content: string;
+}
 
-export type { ExampleOptions } from './example-project';
+export interface PageTemplate {
+  name: string;
+  template: string;
+}
+
+export interface QuickStartOptions {
+  includeExamples: boolean;
+  outputFormat: 'md' | 'html';
+}
+
+export interface GeneratedSection {
+  title: string;
+  content: string;
+}
+
+export interface ExampleOptions {
+  language: string;
+  complexity: 'basic' | 'intermediate' | 'advanced';
+}
 
 export default {
   DocumentationManager,
