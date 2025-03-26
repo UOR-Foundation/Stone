@@ -2,6 +2,12 @@ name: Validate Dashboard Deployment
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'feature/dashboard-api-support'
+    paths:
+      - 'index.html'
+      - '.github/workflows/dashboard.yml'
 
 permissions:
   contents: read
@@ -28,12 +34,39 @@ jobs:
           echo "<!-- This dashboard is deployed from the Stone repository's index.html file -->" >> _site/index.html
           sed -i 's/<title>Stone Dashboard<\/title>/<title>Stone Dashboard - Live<\/title>/' _site/index.html
           
+          # Create the config.js file as the workflow would
+          cat > _site/config.js << 'ENDCONFIG'
+          // Dashboard configuration for GitHub Pages deployment
+          window.STONE_CONFIG = {
+            api: {
+              baseUrl: 'https://stone-api.example.com/api',
+              corsMode: true,
+              includeCredentials: true
+            },
+            features: {
+              liveModeEnabled: false
+            }
+          };
+          ENDCONFIG
+          
+          # Add the config.js script to the HTML
+          sed -i '/<head>/a \\n  <script src="./config.js"></script>' _site/index.html
+          
           # Verify that the file was correctly modified
           grep -q "<title>Stone Dashboard - Live</title>" _site/index.html
           if [ $? -eq 0 ]; then
             echo "✅ Title modification successful"
           else
             echo "❌ Failed to modify title"
+            exit 1
+          fi
+          
+          # Verify the config script was added
+          grep -q "<script src=\"./config.js\"></script>" _site/index.html
+          if [ $? -eq 0 ]; then
+            echo "✅ Config.js script inclusion successful"
+          else
+            echo "❌ Failed to include config.js script"
             exit 1
           fi
           
@@ -64,4 +97,328 @@ jobs:
             exit 1
           fi
           
+          # Test dashboard API configuration
+          npm install -g http-server
+          cd _site
+          
+          # Start a local HTTP server for testing
+          echo "Starting local HTTP server for testing..."
+          http-server -p 8080 -c-1 &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 3
+          
+          # Install tools for API testing
+          npm install puppeteer
+          
+          # Create test script
+          cat > test-api.js << 'ENDTEST'
+          // Dashboard API Test Script
+          const puppeteer = require('puppeteer');
+          
+          (async () => {
+            // Launch a headless browser
+            const browser = await puppeteer.launch({ headless: 'new' });
+            const page = await browser.newPage();
+            
+            // Enable console logging
+            page.on('console', msg => console.log('BROWSER:', msg.text()));
+            
+            try {
+              // Navigate to the dashboard
+              await page.goto('http://localhost:8080/');
+              
+              // Wait for page to load
+              await page.waitForSelector('body');
+              
+              // Check if config.js is loaded by accessing the global variable
+              const hasConfig = await page.evaluate(() => {
+                return typeof window.STONE_CONFIG !== 'undefined';
+              });
+              
+              console.log('Config loaded:', hasConfig);
+              
+              // Get API configuration 
+              const apiConfig = await page.evaluate(() => {
+                return {
+                  apiBaseUrl: window.STONE_CONFIG?.api?.baseUrl,
+                  mockMode: !window.STONE_CONFIG?.features?.liveModeEnabled
+                };
+              });
+              
+              console.log('API Config:', JSON.stringify(apiConfig));
+              
+              // Access the StoneDashboardAPI via a global property
+              await page.evaluate(() => {
+                // Add the API instance to window for testing
+                window.stoneAPI = new StoneDashboardAPI();
+              });
+              
+              // Get configuration from the API
+              const apiSettings = await page.evaluate(() => {
+                return {
+                  mockMode: window.stoneAPI.mockMode,
+                  apiBaseUrl: window.stoneAPI.apiBaseUrl,
+                  corsMode: window.stoneAPI.corsMode,
+                  includeCredentials: window.stoneAPI.includeCredentials
+                };
+              });
+              
+              console.log('API Settings:', JSON.stringify(apiSettings));
+              
+              // Validate API configuration
+              if (apiSettings.apiBaseUrl !== 'https://stone-api.example.com/api') {
+                throw new Error(`Invalid API base URL: ${apiSettings.apiBaseUrl}`);
+              }
+              
+              // All tests passed
+              console.log('All API integration tests passed!');
+            } catch (error) {
+              console.error('Test failed:', error);
+              process.exit(1);
+            } finally {
+              await browser.close();
+            }
+            
+            // Clean up
+            process.exit(0);
+          })();
+          ENDTEST
+          
+          # Run the API test
+          echo "Running API integration tests..."
+          node test-api.js
+          TEST_EXIT_CODE=$?
+          
+          # Stop the HTTP server
+          kill $SERVER_PID
+          
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ API integration tests passed"
+          else
+            echo "❌ API integration tests failed"
+            exit 1
+          fi
+          
           echo "All deployment validation tests passed!"
+      
+      - name: Test API connectivity with mock server
+        run: |
+          # Create a simple mock API server for testing
+          mkdir -p mock-api
+          cd mock-api
+          
+          # Create package.json for the mock server
+          cat > package.json << 'ENDPACKAGE'
+          {
+            "name": "stone-mock-api",
+            "version": "1.0.0",
+            "description": "Mock API server for Stone dashboard testing",
+            "main": "server.js",
+            "scripts": {
+              "start": "node server.js"
+            },
+            "dependencies": {
+              "express": "^4.18.2",
+              "cors": "^2.8.5"
+            }
+          }
+          ENDPACKAGE
+          
+          # Install dependencies
+          npm install
+          
+          # Create a simple Express server
+          cat > server.js << 'ENDSERVER'
+          const express = require('express');
+          const cors = require('cors');
+          const app = express();
+          const port = 3000;
+          
+          // Enable CORS for all routes
+          app.use(cors({
+            origin: '*',
+            methods: ['GET', 'POST', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            credentials: true
+          }));
+          
+          // Status endpoint
+          app.get('/api/status', (req, res) => {
+            res.json({
+              issues: { total: 42, open: 15, closed: 27 },
+              pullRequests: { total: 38, open: 5, closed: 33 },
+              labelDistribution: {
+                'stone': 14,
+                'stone-qa': 8,
+                'stone-feature-implement': 10,
+                'stone-audit': 5,
+                'bug': 7,
+                'enhancement': 12,
+                'documentation': 5
+              }
+            });
+          });
+          
+          // Start the server
+          app.listen(port, () => {
+            console.log(`Mock API server running at http://localhost:${port}`);
+          });
+          ENDSERVER
+          
+          # Start the mock API server
+          echo "Starting mock API server..."
+          node server.js &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 3
+          
+          # Test API connectivity
+          echo "Testing API connectivity..."
+          curl -s http://localhost:3000/api/status | grep -q "issues"
+          if [ $? -eq 0 ]; then
+            echo "✅ Mock API server is running correctly"
+          else
+            echo "❌ Mock API server failed to start"
+            kill $SERVER_PID
+            exit 1
+          fi
+          
+          # Create test directory
+          mkdir -p test-api-live
+          cd test-api-live
+          
+          # Create a simple test HTML file that uses the dashboard API
+          cat > test.html << 'ENDHTML'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Stone API Test</title>
+          </head>
+          <body>
+            <h1>Stone API Test</h1>
+            <div id="result"></div>
+            
+            <script>
+              async function testAPI() {
+                // Create a minimal version of the API class
+                class TestAPI {
+                  constructor() {
+                    this.apiBaseUrl = 'http://localhost:3000/api';
+                    this.corsMode = 'cors';
+                    this.includeCredentials = 'include';
+                  }
+                  
+                  async getStatusData() {
+                    try {
+                      const response = await fetch(`${this.apiBaseUrl}/status`, {
+                        method: 'GET',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        mode: this.corsMode
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                      }
+                      
+                      return await response.json();
+                    } catch (error) {
+                      console.error('API error:', error);
+                      return { error: error.message };
+                    }
+                  }
+                }
+                
+                // Run the test
+                const api = new TestAPI();
+                const result = await api.getStatusData();
+                
+                // Display the result
+                document.getElementById('result').innerHTML = `
+                  <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+                // Return result for testing
+                return result;
+              }
+              
+              // Run the test automatically
+              testAPI();
+            </script>
+          </body>
+          </html>
+          ENDHTML
+          
+          # Start a server for the test page
+          npx http-server -p 8081 -c-1 &
+          TEST_SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 3
+          
+          # Install Puppeteer for the live test
+          npm install puppeteer
+          
+          # Test the API using Puppeteer
+          cat > test-live-api.js << 'ENDTEST'
+          const puppeteer = require('puppeteer');
+          
+          (async () => {
+            const browser = await puppeteer.launch({ headless: 'new' });
+            const page = await browser.newPage();
+            
+            try {
+              await page.goto('http://localhost:8081/test.html');
+              await page.waitForSelector('#result pre');
+              
+              // Get the API result
+              const result = await page.evaluate(() => {
+                const resultText = document.querySelector('#result pre').textContent;
+                try {
+                  return JSON.parse(resultText);
+                } catch (e) {
+                  return { error: 'Failed to parse result' };
+                }
+              });
+              
+              console.log('API result:', JSON.stringify(result));
+              
+              // Check if the API call was successful
+              if (result.issues && result.pullRequests) {
+                console.log('✅ Live API test successful!');
+              } else {
+                console.error('❌ Live API test failed!');
+                throw new Error('API test failed');
+              }
+            } catch (error) {
+              console.error('Test error:', error);
+              process.exit(1);
+            } finally {
+              await browser.close();
+            }
+            
+            process.exit(0);
+          })();
+          ENDTEST
+          
+          # Run the live API test
+          echo "Running live API test..."
+          node test-live-api.js
+          LIVE_TEST_EXIT_CODE=$?
+          
+          # Stop the servers
+          kill $SERVER_PID
+          kill $TEST_SERVER_PID
+          
+          if [ $LIVE_TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ Live API tests passed"
+          else
+            echo "❌ Live API tests failed"
+            exit 1
+          fi
+          
+          echo "All API connectivity tests passed!"
