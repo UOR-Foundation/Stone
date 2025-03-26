@@ -422,7 +422,7 @@
       </div>
     </div>
     
-    <div id="dashboard-content" style="display: none;">
+    <div id="dashboard-content">
       <div class="filter-controls">
         <select id="repo-selector" class="repo-selector">
           <option value="">Select a repository</option>
@@ -559,13 +559,6 @@
       </div>
     </div>
     
-    <div class="coming-soon">
-      <h2>Interactive Dashboard Coming Soon</h2>
-      <p>Our fully interactive dashboard with real-time workflow visualization, metrics, and performance analytics is being developed.</p>
-      <p>The dashboard will provide a complete view of your Stone workflows, helping you identify bottlenecks and optimize your development process.</p>
-      <p>Check back for updates or visit our <a href="https://github.com/UOR-Foundation/Stone">GitHub repository</a> for more information.</p>
-    </div>
-    
     <div class="card">
       <h2>Getting Started</h2>
       <pre>npm install --save-dev @uor-foundation/stone</pre>
@@ -582,11 +575,15 @@
 
   <script>
     // Stone Dashboard JavaScript - This integrates with the Stone StatusDashboard, ProgressVisualization, and PerformanceAnalytics
+    let dashboardManager; // Global dashboard manager reference
+    
     document.addEventListener('DOMContentLoaded', function() {
       const loginButton = document.getElementById('login-button');
       const authContainer = document.getElementById('auth-container');
       const dashboardContent = document.getElementById('dashboard-content');
-      const comingSoonNotice = document.querySelector('.coming-soon');
+      
+      // Initialize dashboard immediately
+      initializeDashboard();
       
       // Authentication handling - in a real implementation, this would interface with GitHub OAuth
       loginButton.addEventListener('click', function(e) {
@@ -598,11 +595,9 @@
         
         setTimeout(() => {
           authContainer.style.display = 'none';
-          dashboardContent.style.display = 'block';
-          comingSoonNotice.style.display = 'none';
           
-          // Initialize dashboard
-          initializeDashboard();
+          // Refresh dashboard data
+          dashboardManager.loadRepositoryData(dashboardManager.currentRepo);
         }, 1000);
       });
       
@@ -925,7 +920,7 @@
       // Initialize the dashboard with the Stone API
       function initializeDashboard() {
         const api = new StoneDashboardAPI();
-        const dashboardManager = new StoneDashboardManager(api);
+        dashboardManager = new StoneDashboardManager(api);
         dashboardManager.initialize();
       }
       
