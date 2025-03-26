@@ -603,9 +603,8 @@
         constructor() {
           this.token = null;
           
-          // Detect if we're running in a real server environment or local demo
-          this.mockMode = window.location.hostname === 'localhost' && 
-                          !window.location.search.includes('live=true');
+          // Always use mock mode unless explicitly set to live mode via query parameter
+          this.mockMode = !window.location.search.includes('live=true');
           
           console.log(`API running in ${this.mockMode ? 'mock' : 'live'} mode`);
         }
@@ -618,10 +617,12 @@
         // Main method to get status data - maps to StatusDashboard.getStatusData()
         async getStatusData(repoId) {
           if (this.mockMode) {
+            console.log('Using mock status data');
             return this.getMockStatusData(repoId);
           }
           
           try {
+            console.log('Fetching live status data from API');
             // Call the actual Stone API
             const response = await fetch('/api/status', {
               method: 'GET',
@@ -632,12 +633,14 @@
             });
             
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              console.warn(`API returned status ${response.status}, falling back to mock data`);
+              return this.getMockStatusData(repoId);
             }
             
             return await response.json();
           } catch (error) {
             console.error('Failed to fetch status data:', error);
+            console.log('Falling back to mock data');
             return this.getMockStatusData(repoId); // Fallback to mock data on error
           }
         }
@@ -645,10 +648,12 @@
         // Get performance metrics - maps to StatusDashboard.getPerformanceMetrics()
         async getPerformanceMetrics(repoId) {
           if (this.mockMode) {
+            console.log('Using mock performance metrics');
             return this.getMockPerformanceData(repoId);
           }
           
           try {
+            console.log('Fetching live performance metrics from API');
             // Call the actual Stone API
             const response = await fetch('/api/performance', {
               method: 'GET',
@@ -659,12 +664,14 @@
             });
             
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              console.warn(`API returned status ${response.status}, falling back to mock data`);
+              return this.getMockPerformanceData(repoId);
             }
             
             return await response.json();
           } catch (error) {
             console.error('Failed to fetch performance metrics:', error);
+            console.log('Falling back to mock data');
             return this.getMockPerformanceData(repoId);
           }
         }
@@ -672,10 +679,12 @@
         // Get bottlenecks - maps to StatusDashboard.identifyBottlenecks()
         async getBottlenecks(repoId) {
           if (this.mockMode) {
+            console.log('Using mock bottlenecks data');
             return this.getMockBottlenecks(repoId);
           }
           
           try {
+            console.log('Fetching live bottlenecks data from API');
             // Call the actual Stone API
             const response = await fetch('/api/bottlenecks', {
               method: 'GET',
@@ -686,12 +695,14 @@
             });
             
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              console.warn(`API returned status ${response.status}, falling back to mock data`);
+              return this.getMockBottlenecks(repoId);
             }
             
             return await response.json();
           } catch (error) {
             console.error('Failed to fetch bottlenecks:', error);
+            console.log('Falling back to mock data');
             return this.getMockBottlenecks(repoId);
           }
         }
@@ -699,10 +710,12 @@
         // Get workflow progress - maps to ProgressVisualization.generateWorkflowGraph()
         async getWorkflowProgress(repoId) {
           if (this.mockMode) {
+            console.log('Using mock workflow stages data');
             return this.getMockWorkflowStages(repoId);
           }
           
           try {
+            console.log('Fetching live workflow progress from API');
             // Call the actual Stone API
             const response = await fetch('/api/workflow-progress', {
               method: 'GET',
@@ -713,12 +726,14 @@
             });
             
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              console.warn(`API returned status ${response.status}, falling back to mock data`);
+              return this.getMockWorkflowStages(repoId);
             }
             
             return await response.json();
           } catch (error) {
             console.error('Failed to fetch workflow progress:', error);
+            console.log('Falling back to mock data');
             return this.getMockWorkflowStages(repoId);
           }
         }
@@ -726,6 +741,7 @@
         // Get repository list
         async getRepositories() {
           if (this.mockMode) {
+            console.log('Using mock repository list');
             return [
               { name: 'UOR-Foundation/Stone', id: 'stone' },
               { name: 'UOR-Foundation/Example', id: 'example' },
@@ -734,6 +750,7 @@
           }
           
           try {
+            console.log('Fetching live repository list from API');
             // Call the actual Stone API
             const response = await fetch('/api/repositories', {
               method: 'GET',
@@ -744,14 +761,22 @@
             });
             
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              console.warn(`API returned status ${response.status}, falling back to mock data`);
+              return [
+                { name: 'UOR-Foundation/Stone', id: 'stone' },
+                { name: 'UOR-Foundation/Example', id: 'example' },
+                { name: 'UOR-Foundation/Demo', id: 'demo' }
+              ];
             }
             
             return await response.json();
           } catch (error) {
             console.error('Failed to fetch repositories:', error);
+            console.log('Falling back to mock data');
             return [
-              { name: 'UOR-Foundation/Stone', id: 'stone' }
+              { name: 'UOR-Foundation/Stone', id: 'stone' },
+              { name: 'UOR-Foundation/Example', id: 'example' },
+              { name: 'UOR-Foundation/Demo', id: 'demo' }
             ];
           }
         }
@@ -1005,24 +1030,48 @@
           this.showLoadingState();
           
           try {
-            // Fetch all required data in parallel for better performance
-            const [statusData, performanceMetrics, bottlenecks, workflowStages] = await Promise.all([
+            console.log(`Loading data for repository: ${repoId}`);
+            
+            // Fetch all required data in parallel using Promise.allSettled to handle partial failures
+            const results = await Promise.allSettled([
               this.api.getStatusData(repoId),
               this.api.getPerformanceMetrics(repoId),
               this.api.getBottlenecks(repoId),
               this.api.getWorkflowProgress(repoId)
             ]);
             
+            // Extract results or use defaults for any that failed
+            const statusData = results[0].status === 'fulfilled' ? results[0].value : { 
+              issues: { total: 0, open: 0, closed: 0 },
+              pullRequests: { total: 0, open: 0, closed: 0 },
+              labelDistribution: {}
+            };
+            
+            const performanceMetrics = results[1].status === 'fulfilled' ? results[1].value : {
+              averageTimeToCompletion: 0,
+              stageMetrics: {}
+            };
+            
+            const bottlenecks = results[2].status === 'fulfilled' ? results[2].value : [];
+            
+            const workflowStages = results[3].status === 'fulfilled' ? results[3].value : [];
+            
             // Update UI with data
             this.updateIssueMetrics(statusData);
             this.updatePRMetrics(statusData);
             this.updatePerformanceMetrics(performanceMetrics);
             this.updateBottlenecks(bottlenecks);
-            this.updateLabelDistribution(statusData.labelDistribution);
+            
+            if (statusData.labelDistribution) {
+              this.updateLabelDistribution(statusData.labelDistribution);
+            }
+            
             this.updateWorkflowStages(workflowStages);
+            
+            console.log('Dashboard updated successfully');
           } catch (error) {
             console.error('Failed to load repository data:', error);
-            this.showError('Failed to load repository data. Please try again later.');
+            this.showError('Failed to load repository data. Using mock data instead.');
           }
         }
         
