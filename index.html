@@ -582,9 +582,6 @@
       const authContainer = document.getElementById('auth-container');
       const dashboardContent = document.getElementById('dashboard-content');
       
-      // Initialize dashboard immediately
-      initializeDashboard();
-      
       // Authentication handling - in a real implementation, this would interface with GitHub OAuth
       loginButton.addEventListener('click', function(e) {
         e.preventDefault();
@@ -1234,6 +1231,9 @@
           }
         }
       }
+      
+      // Initialize dashboard now that all classes are defined
+      initializeDashboard();
     });
   </script>
 </body>
