@@ -8,7 +8,7 @@ import { PerformanceAnalytics } from '../../dashboard/performance-analytics';
 import { DashboardServer } from '../../dashboard';
 import { Logger } from '../../utils/logger';
 import * as http from 'http';
-import * as open from 'open';
+import open from 'open';
 
 /**
  * Command for displaying the Stone status dashboard
