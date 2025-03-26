@@ -606,11 +606,16 @@
         }, 1000);
       });
       
-      // This would connect to the actual Stone API in a production environment
+      // This class connects to the Stone API endpoints
       class StoneDashboardAPI {
         constructor() {
           this.token = null;
-          this.mockMode = true; // Mock data mode toggle
+          
+          // Detect if we're running in a real server environment or local demo
+          this.mockMode = window.location.hostname === 'localhost' && 
+                          !window.location.search.includes('live=true');
+          
+          console.log(`API running in ${this.mockMode ? 'mock' : 'live'} mode`);
         }
         
         authenticate(token) {
@@ -624,15 +629,19 @@
             return this.getMockStatusData(repoId);
           }
           
-          // In a real implementation, this would call the actual API
           try {
+            // Call the actual Stone API
             const response = await fetch('/api/status', {
+              method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ repository: repoId })
+              }
             });
+            
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
             
             return await response.json();
           } catch (error) {
@@ -647,15 +656,19 @@
             return this.getMockPerformanceData(repoId);
           }
           
-          // In a real implementation, this would call the actual API
           try {
+            // Call the actual Stone API
             const response = await fetch('/api/performance', {
+              method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ repository: repoId })
+              }
             });
+            
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
             
             return await response.json();
           } catch (error) {
@@ -670,15 +683,19 @@
             return this.getMockBottlenecks(repoId);
           }
           
-          // In a real implementation, this would call the actual API
           try {
+            // Call the actual Stone API
             const response = await fetch('/api/bottlenecks', {
+              method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ repository: repoId })
+              }
             });
+            
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
             
             return await response.json();
           } catch (error) {
@@ -693,15 +710,19 @@
             return this.getMockWorkflowStages(repoId);
           }
           
-          // In a real implementation, this would call the actual API
           try {
+            // Call the actual Stone API
             const response = await fetch('/api/workflow-progress', {
+              method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ repository: repoId })
+              }
             });
+            
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
             
             return await response.json();
           } catch (error) {
@@ -720,11 +741,19 @@
             ];
           }
           
-          // In a real implementation, this would call the GitHub API
           try {
+            // Call the actual Stone API
             const response = await fetch('/api/repositories', {
-              headers: { 'Authorization': `Bearer ${this.token}` }
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+              }
             });
+            
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
             
             return await response.json();
           } catch (error) {
@@ -893,7 +922,7 @@
         }
       }
       
-      // Initialize the dashboard - this would connect to the real Stone API
+      // Initialize the dashboard with the Stone API
       function initializeDashboard() {
         const api = new StoneDashboardAPI();
         const dashboardManager = new StoneDashboardManager(api);

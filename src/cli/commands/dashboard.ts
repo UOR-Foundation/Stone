@@ -5,7 +5,10 @@ import { GitHubClient } from '../../github/client';
 import { StatusDashboard } from '../../dashboard/status-dashboard';
 import { ProgressVisualization } from '../../dashboard/progress-visualization';
 import { PerformanceAnalytics } from '../../dashboard/performance-analytics';
+import { DashboardServer } from '../../dashboard';
 import { Logger } from '../../utils/logger';
+import * as http from 'http';
+import * as open from 'open';
 
 /**
  * Command for displaying the Stone status dashboard
@@ -16,6 +19,9 @@ export function createDashboardCommand(): Command {
     .option('-i, --issue <number>', 'Show progress for a specific issue')
     .option('-p, --performance', 'Show detailed performance analytics')
     .option('-w, --workflow', 'Show workflow graph')
+    .option('-s, --server', 'Start the dashboard web server')
+    .option('-port, --port <number>', 'Port for the dashboard server', '3000')
+    .option('-o, --open', 'Open the dashboard in the default browser')
     .action(async (options) => {
       const logger = new Logger();
       
@@ -40,7 +46,13 @@ export function createDashboardCommand(): Command {
         const progressVisualization = new ProgressVisualization(statusDashboard, configLoader);
         const performanceAnalytics = new PerformanceAnalytics(statusDashboard, client, configLoader);
         
-        // Determine what to display
+        // Check if we should start the server
+        if (options.server) {
+          await startDashboardServer(client, configLoader, parseInt(options.port, 10), options.open);
+          return;
+        }
+        
+        // Determine what to display in CLI mode
         if (options.issue) {
           // Show issue progress
           const issueNumber = parseInt(options.issue, 10);
@@ -83,4 +95,101 @@ export function createDashboardCommand(): Command {
     });
   
   return dashboard;
+}
+
+/**
+ * Start the dashboard web server
+ */
+async function startDashboardServer(
+  client: GitHubClient, 
+  configLoader: ConfigLoader,
+  port: number = 3000,
+  openBrowser: boolean = false
+): Promise<void> {
+  const logger = new Logger();
+  logger.info(`Starting dashboard server on port ${port}...`);
+  
+  // Create the dashboard server
+  const dashboardServer = new DashboardServer(client, configLoader);
+  
+  // Create an HTTP server to handle requests
+  const server = http.createServer(async (req, res) => {
+    if (!req.url) {
+      res.statusCode = 404;
+      res.end('Not found');
+      return;
+    }
+    
+    // Parse request
+    const apiRequest = {
+      path: req.url.split('?')[0],
+      method: req.method || 'GET',
+      query: parseQueryString(req.url),
+      body: {},
+      headers: req.headers as Record<string, string>
+    };
+    
+    // Handle the request
+    try {
+      const response = await dashboardServer.handleRequest(apiRequest);
+      
+      // Set status code
+      res.statusCode = response.status;
+      
+      // Set headers
+      if (response.headers) {
+        for (const [key, value] of Object.entries(response.headers)) {
+          res.setHeader(key, value);
+        }
+      }
+      
+      // Set content type if not already set
+      if (!response.headers?.['Content-Type']) {
+        res.setHeader('Content-Type', 'application/json');
+      }
+      
+      // Send response
+      if (typeof response.body === 'string') {
+        res.end(response.body);
+      } else {
+        res.end(JSON.stringify(response.body));
+      }
+    } catch (error) {
+      logger.error(`Server error: ${error}`);
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Internal server error' }));
+    }
+  });
+  
+  // Start the server
+  server.listen(port, () => {
+    const url = `http://localhost:${port}`;
+    logger.info(`Dashboard server running at ${url}`);
+    
+    // Open browser if requested
+    if (openBrowser) {
+      open(url);
+    }
+    
+    // Keep the server running until interrupted
+    logger.info('Press Ctrl+C to stop the server');
+  });
+}
+
+/**
+ * Parse query string from URL
+ */
+function parseQueryString(url: string): Record<string, any> {
+  const query: Record<string, any> = {};
+  const queryString = url.split('?')[1];
+  
+  if (queryString) {
+    queryString.split('&').forEach(pair => {
+      const [key, value] = pair.split('=');
+      query[decodeURIComponent(key)] = decodeURIComponent(value || '');
+    });
+  }
+  
+  return query;
 }
