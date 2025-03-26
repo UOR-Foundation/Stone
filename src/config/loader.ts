@@ -66,4 +66,21 @@ export class ConfigLoader {
     }
     return this.config;
   }
+
+  /**
+   * Validate a configuration object against the schema
+   */
+  public validateConfig(config: StoneConfig): { isValid: boolean; errors: string[] } {
+    const { error } = configSchema.validate(config, {
+      abortEarly: false,
+      allowUnknown: false,
+    });
+
+    if (error) {
+      const errors = error.details.map(detail => detail.message);
+      return { isValid: false, errors };
+    }
+
+    return { isValid: true, errors: [] };
+  }
 }

@@ -236,3 +236,25 @@ export {
   NotificationSystem,
   DataExchangeManager
 } from './integration';
+
+// Export dashboard components
+export {
+  StatusDashboard,
+  ProgressVisualization,
+  PerformanceAnalytics
+} from './dashboard';
+
+// Export documentation components
+export {
+  DocumentationManager,
+  QuickStartGuideGenerator,
+  ExampleProjectGenerator
+} from './documentation';
+
+// Export usability components
+export {
+  InteractiveCLI,
+  ConfigurationWizard,
+  ErrorRecoveryGuide,
+  TroubleshootingTools
+} from './usability';
