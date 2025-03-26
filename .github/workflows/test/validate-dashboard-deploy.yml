@@ -1,0 +1,67 @@
+name: Validate Dashboard Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Test Dashboard Deployment
+        run: |
+          # Create the _site directory as our dashboard workflow would
+          mkdir -p _site
+          cp index.html _site/index.html
+          
+          # Apply modifications as in the dashboard workflow
+          echo "<!-- This dashboard is deployed from the Stone repository's index.html file -->" >> _site/index.html
+          sed -i 's/<title>Stone Dashboard<\/title>/<title>Stone Dashboard - Live<\/title>/' _site/index.html
+          
+          # Verify that the file was correctly modified
+          grep -q "<title>Stone Dashboard - Live</title>" _site/index.html
+          if [ $? -eq 0 ]; then
+            echo "✅ Title modification successful"
+          else
+            echo "❌ Failed to modify title"
+            exit 1
+          fi
+          
+          # Verify the comment was added
+          grep -q "<!-- This dashboard is deployed from the Stone repository's index.html file -->" _site/index.html
+          if [ $? -eq 0 ]; then
+            echo "✅ Comment added successfully"
+          else
+            echo "❌ Failed to add comment"
+            exit 1
+          fi
+          
+          # Basic validation of HTML structure
+          grep -q "<html" _site/index.html
+          if [ $? -eq 0 ]; then
+            echo "✅ HTML structure validation passed"
+          else
+            echo "❌ HTML structure validation failed"
+            exit 1
+          fi
+          
+          # Check for dashboard components
+          grep -q "Stone Dashboard" _site/index.html
+          if [ $? -eq 0 ]; then
+            echo "✅ Dashboard title found"
+          else
+            echo "❌ Dashboard title not found"
+            exit 1
+          fi
+          
+          echo "All deployment validation tests passed!"
