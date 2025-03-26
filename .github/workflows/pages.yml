@@ -41,10 +41,13 @@ jobs:
       - name: Build dashboard static files
         run: |
           mkdir -p dist/dashboard
-          cp -r src/dashboard/static/* dist/dashboard/ || echo "No static dashboard files found, creating basic page"
+          ls -la src/dashboard/static/ || true
           
-          # If no static files exist, create a basic dashboard
-          if [ ! -f dist/dashboard/index.html ]; then
+          # Copy static files or create basic dashboard if not found
+          if [ -d "src/dashboard/static" ] && [ -f "src/dashboard/static/index.html" ]; then
+            echo "Using existing static files"
+            cp -r src/dashboard/static/* dist/dashboard/
+          else
             echo "Creating basic dashboard page"
             cat > dist/dashboard/index.html << 'EOF'
 <!DOCTYPE html>
@@ -93,6 +96,10 @@ jobs:
 </html>
 EOF
           fi
+          
+          # List the dashboard directory contents for debugging
+          echo "Contents of dist/dashboard:"
+          ls -la dist/dashboard/
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
