@@ -7,6 +7,7 @@ import { statusCommand } from './commands/status';
 import { runCommand } from './commands/run';
 import { resetCommand } from './commands/reset';
 import { actionsCommand } from './commands/actions';
+import { createDashboardCommand } from './commands/dashboard';
 import { Logger } from '../utils/logger';
 
 const logger = new Logger();
@@ -26,6 +27,7 @@ statusCommand(program);
 runCommand(program);
 resetCommand(program);
 actionsCommand(program);
+program.addCommand(createDashboardCommand());
 
 // Handle errors
 program.exitOverride();

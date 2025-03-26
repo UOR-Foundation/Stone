@@ -13,6 +13,57 @@ export class GitHubClient {
   }
   
   /**
+   * Get the currently authenticated user
+   */
+  public async getCurrentUser() {
+    return this.octokit.rest.users.getAuthenticated();
+  }
+
+  /**
+   * Get a repository
+   */
+  public async getRepository(owner: string, name: string) {
+    return this.octokit.rest.repos.get({
+      owner,
+      repo: name
+    });
+  }
+
+  /**
+   * List issues for a repository
+   */
+  public async listIssues(state?: 'open' | 'closed' | 'all', labels?: string) {
+    return this.octokit.rest.issues.listForRepo({
+      owner: this.config.repository.owner,
+      repo: this.config.repository.name,
+      state: state || 'open',
+      labels
+    });
+  }
+
+  /**
+   * List pull requests for a repository
+   */
+  public async listPullRequests(state?: 'open' | 'closed' | 'all') {
+    return this.octokit.rest.pulls.list({
+      owner: this.config.repository.owner,
+      repo: this.config.repository.name,
+      state: state || 'open'
+    });
+  }
+
+  /**
+   * Get timeline for an issue
+   */
+  public async getIssueTimeline(issueNumber: number) {
+    return this.octokit.rest.issues.listEventsForTimeline({
+      owner: this.config.repository.owner,
+      repo: this.config.repository.name,
+      issue_number: issueNumber
+    });
+  }
+  
+  /**
    * Get the GitHub token used for authentication
    * @returns The GitHub token
    */

@@ -68,6 +68,7 @@ export interface StoneConfig {
     owner: string;
     name: string;
     path?: string;
+    defaultBranch?: string;
   };
   packages: Array<{
     name: string;
@@ -81,6 +82,10 @@ export interface StoneConfig {
     useWebhooks: boolean;
     testCommand: string;
     timeoutMinutes: number;
+    issuePrefix?: string;
+    branchPrefix?: string;
+    useLabels?: boolean;
+    stages?: string[];
   };
   github: {
     actionsDirectory: string;
@@ -101,6 +106,13 @@ export interface StoneConfig {
     directory: string;
     apiDocsDirectory: string;
     readmeFile: string;
+    outputDir?: string;
+    examplesDir?: string;
+  };
+  claude?: {
+    apiKey: string;
+    endpoint: string;
+    model: string;
   };
   errorRecovery?: {
     includeStackTrace: boolean;
