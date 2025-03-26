@@ -62,77 +62,114 @@ jobs:
         run: |
           mkdir -p src/github-actions
           
-          cat > src/github-actions/index.ts << EOF
-          import * as core from '@actions/core';
-          import * as github from '@actions/github';
-          import { init, processEvent, runWorkflow } from '../index';
-          
-          async function run(): Promise<void> {
-            try {
-              // Get inputs
-              const token = core.getInput('github-token', { required: true });
-              const action = core.getInput('action', { required: true });
-              const issueNumber = core.getInput('issue-number');
-              const repository = core.getInput('repository');
-              
-              // Parse repository if provided
-              let owner = '';
-              let repo = '';
-              
-              if (repository) {
-                const parts = repository.split('/');
-                if (parts.length === 2) {
-                  owner = parts[0];
-                  repo = parts[1];
-                } else {
-                  throw new Error('Repository must be in format owner/repo');
-                }
-              } else {
-                // Get from context
-                owner = github.context.repo.owner;
-                repo = github.context.repo.repo;
-              }
-              
-              // Execute action
-              switch (action) {
-                case 'init':
-                  await init({ owner, name: repo, token });
-                  break;
-                  
-                case 'process':
-                  if (!issueNumber) {
-                    throw new Error('Issue number is required for process action');
-                  }
-                  await runWorkflow('feature', parseInt(issueNumber), { token });
-                  break;
-                  
-                case 'status':
-                  // Implement status reporting
-                  core.info('Status reporting not yet implemented');
-                  break;
-                  
-                default:
-                  throw new Error(\`Unknown action: \${action}\`);
-              }
-              
-              core.info('Stone action completed successfully');
-            } catch (error) {
-              if (error instanceof Error) {
-                core.setFailed(error.message);
-              } else {
-                core.setFailed('An unknown error occurred');
-              }
-            }
-          }
-          
-          run();
-          EOF
+          # First make sure the index.ts exports are correct
+          cat > src/github-actions/index.ts << 'EOF'
+// Export GitHub Actions components
+export { GitHubActionsIntegration } from './github-actions-integration';
+export { WorkflowGenerator } from './workflow-generator';
+export { WebhookHandler } from './webhook-handler';
+export { CIPipeline } from './ci-pipeline';
+EOF
+
+          # Create the GitHub Action entry point file
+          cat > src/github-actions/action-entrypoint.ts << 'EOF'
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { init, processEvent, runWorkflow } from '../index';
+
+async function run(): Promise<void> {
+  try {
+    // Get inputs
+    const token = core.getInput('github-token', { required: true });
+    const action = core.getInput('action', { required: true });
+    const issueNumber = core.getInput('issue-number');
+    const repository = core.getInput('repository');
+    
+    // Parse repository if provided
+    let owner = '';
+    let repo = '';
+    
+    if (repository) {
+      const parts = repository.split('/');
+      if (parts.length === 2) {
+        owner = parts[0];
+        repo = parts[1];
+      } else {
+        throw new Error('Repository must be in format owner/repo');
+      }
+    } else {
+      // Get from context
+      owner = github.context.repo.owner;
+      repo = github.context.repo.repo;
+    }
+    
+    // Execute action
+    switch (action) {
+      case 'init':
+        await init({ owner, name: repo, token });
+        break;
+        
+      case 'process':
+        if (!issueNumber) {
+          throw new Error('Issue number is required for process action');
+        }
+        await runWorkflow('feature', parseInt(issueNumber), { token });
+        break;
+        
+      case 'status':
+        // Implement status reporting
+        core.info('Status reporting not yet implemented');
+        break;
+        
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
+    
+    core.info('Stone action completed successfully');
+  } catch (error) {
+    if (error instanceof Error) {
+      core.setFailed(error.message);
+    } else {
+      core.setFailed('An unknown error occurred');
+    }
+  }
+}
+
+run();
+EOF
           
           # Add @actions/core and @actions/github as dependencies
           npm install --save @actions/core @actions/github
           
-          # Rebuild with new dependencies
-          npm run build
+          # Update action.yml to use the right entry point
+          cat > action.yml << 'EOF'
+name: 'Stone - AI Software Factory'
+description: 'A structured system for orchestrating GitHub-based development using Claude Code'
+author: 'UOR Foundation'
+
+inputs:
+  github-token:
+    description: 'GitHub token for repository access'
+    required: true
+  action:
+    description: 'Action to perform (init, process, status)'
+    required: true
+    default: 'status'
+  issue-number:
+    description: 'Issue number to process'
+    required: false
+  repository:
+    description: 'Repository name in format owner/repo'
+    required: false
+
+runs:
+  using: 'node20'
+  main: 'dist/github-actions/action-entrypoint.js'
+
+branding:
+  icon: 'code'
+  color: 'blue'
+EOF
       
       - name: Create action README
         run: |
