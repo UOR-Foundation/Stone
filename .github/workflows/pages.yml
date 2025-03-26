@@ -46,52 +46,52 @@ jobs:
           # If no static files exist, create a basic dashboard
           if [ ! -f dist/dashboard/index.html ]; then
             echo "Creating basic dashboard page"
-            cat > dist/dashboard/index.html << EOF
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Stone Dashboard</title>
-              <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; padding: 0; line-height: 1.6; }
-                .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-                header { background-color: #f4f4f4; padding: 1rem 0; text-align: center; }
-                h1 { color: #333; }
-                .card { background-color: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
-                .coming-soon { text-align: center; padding: 2rem; background-color: #f9f9f9; border-radius: 5px; margin: 2rem 0; }
-              </style>
-            </head>
-            <body>
-              <header>
-                <div class="container">
-                  <h1>Stone Dashboard</h1>
-                  <p>A software factory for GitHub-based development using Claude Code</p>
-                </div>
-              </header>
-              
-              <div class="container">
-                <div class="card">
-                  <h2>Welcome to Stone</h2>
-                  <p>Stone is a structured system for orchestrating GitHub-based development using Claude Code. It manages the software development process through specialized roles, each with defined responsibilities and boundaries.</p>
-                </div>
-                
-                <div class="coming-soon">
-                  <h2>Interactive Dashboard Coming Soon</h2>
-                  <p>Our interactive dashboard with workflow visualization, metrics, and performance analytics is coming soon.</p>
-                  <p>Check back for updates or visit our <a href="https://github.com/UOR-Foundation/Stone">GitHub repository</a> for more information.</p>
-                </div>
-                
-                <div class="card">
-                  <h2>Getting Started</h2>
-                  <pre>npm install --save-dev @uor-foundation/stone</pre>
-                  <p>Initialize Stone in your repository:</p>
-                  <pre>npx stone init</pre>
-                </div>
-              </div>
-            </body>
-            </html>
-            EOF
+            cat > dist/dashboard/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stone Dashboard</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; padding: 0; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    header { background-color: #f4f4f4; padding: 1rem 0; text-align: center; }
+    h1 { color: #333; }
+    .card { background-color: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .coming-soon { text-align: center; padding: 2rem; background-color: #f9f9f9; border-radius: 5px; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Stone Dashboard</h1>
+      <p>A software factory for GitHub-based development using Claude Code</p>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="card">
+      <h2>Welcome to Stone</h2>
+      <p>Stone is a structured system for orchestrating GitHub-based development using Claude Code. It manages the software development process through specialized roles, each with defined responsibilities and boundaries.</p>
+    </div>
+    
+    <div class="coming-soon">
+      <h2>Interactive Dashboard Coming Soon</h2>
+      <p>Our interactive dashboard with workflow visualization, metrics, and performance analytics is coming soon.</p>
+      <p>Check back for updates or visit our <a href="https://github.com/UOR-Foundation/Stone">GitHub repository</a> for more information.</p>
+    </div>
+    
+    <div class="card">
+      <h2>Getting Started</h2>
+      <pre>npm install --save-dev @uor-foundation/stone</pre>
+      <p>Initialize Stone in your repository:</p>
+      <pre>npx stone init</pre>
+    </div>
+  </div>
+</body>
+</html>
+EOF
           fi
       
       - name: Upload artifact
