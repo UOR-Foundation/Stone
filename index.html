@@ -603,10 +603,94 @@
         constructor() {
           this.token = null;
           
-          // Always use mock mode unless explicitly set to live mode via query parameter
-          this.mockMode = !window.location.search.includes('live=true');
+          // Detect environment and configure API settings
+          this.configureEnvironment();
           
-          console.log(`API running in ${this.mockMode ? 'mock' : 'live'} mode`);
+          console.log(`API running in ${this.mockMode ? 'mock' : 'live'} mode with base URL: ${this.apiBaseUrl}`);
+        }
+        
+        // Configure the API based on the current environment
+        configureEnvironment() {
+          // Default to mock mode
+          this.mockMode = true;
+          
+          // Default API URL for local development
+          this.apiBaseUrl = '/api';
+          
+          // Check for external configuration (set by GitHub Pages deployment)
+          if (window.STONE_CONFIG) {
+            console.log('Using external configuration from config.js');
+            const config = window.STONE_CONFIG;
+            
+            // Use configuration from config.js
+            if (config.api && config.api.baseUrl) {
+              this.apiBaseUrl = config.api.baseUrl;
+            }
+            
+            // Set mock mode based on config
+            if (config.features && typeof config.features.liveModeEnabled === 'boolean') {
+              this.mockMode = !config.features.liveModeEnabled;
+            }
+            
+            // Configure CORS settings
+            this.corsMode = config.api?.corsMode ?? 'cors';
+            this.includeCredentials = config.api?.includeCredentials ?? 'include';
+          } else {
+            // Manual environment detection when no external config is available
+            
+            // Check if explicitly set to live mode via query parameter
+            const forceLive = window.location.search.includes('live=true');
+            const forceMock = window.location.search.includes('mock=true');
+            
+            // GitHub Pages detection
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            
+            // Override API URL for GitHub Pages (when deployed)
+            if (isGitHubPages) {
+              // Use the GitHub API proxy or the Stone server if available
+              // In a production setup, this would point to the actual API server
+              this.apiBaseUrl = 'https://stone-api.example.com/api';
+              
+              // For demo purposes, you can deploy a Firebase function or other serverless endpoint
+              // and use that URL here
+            }
+            
+            // Local development with server
+            if (window.location.hostname === 'localhost') {
+              const port = window.location.port;
+              // If running on a standard HTTP port, assume the API is on the same origin
+              if (port === '3000' || port === '8000' || port === '8080') {
+                this.apiBaseUrl = `${window.location.origin}/api`;
+              }
+            }
+            
+            // Default CORS settings
+            this.corsMode = 'cors';
+            this.includeCredentials = 'include';
+            
+            // Final override from query parameters
+            if (forceLive) {
+              this.mockMode = false;
+            } else if (forceMock) {
+              this.mockMode = true;
+            }
+          }
+          
+          // Query parameters always override other settings
+          const urlParams = new URLSearchParams(window.location.search);
+          
+          // Allow API URL override via query parameter
+          const apiUrl = urlParams.get('apiUrl');
+          if (apiUrl) {
+            this.apiBaseUrl = apiUrl;
+          }
+          
+          // Allow mock mode override via query parameter
+          if (urlParams.has('live')) {
+            this.mockMode = urlParams.get('live') !== 'true';
+          } else if (urlParams.has('mock')) {
+            this.mockMode = urlParams.get('mock') === 'true';
+          }
         }
         
         authenticate(token) {
@@ -622,14 +706,17 @@
           }
           
           try {
-            console.log('Fetching live status data from API');
+            console.log(`Fetching live status data from API: ${this.apiBaseUrl}/status`);
             // Call the actual Stone API
-            const response = await fetch('/api/status', {
+            const response = await fetch(`${this.apiBaseUrl}/status`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              }
+              },
+              // Use configured CORS settings
+              credentials: this.includeCredentials,
+              mode: this.corsMode
             });
             
             if (!response.ok) {
@@ -653,14 +740,16 @@
           }
           
           try {
-            console.log('Fetching live performance metrics from API');
+            console.log(`Fetching live performance metrics from API: ${this.apiBaseUrl}/performance`);
             // Call the actual Stone API
-            const response = await fetch('/api/performance', {
+            const response = await fetch(`${this.apiBaseUrl}/performance`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              }
+              },
+              credentials: this.includeCredentials,
+              mode: this.corsMode
             });
             
             if (!response.ok) {
@@ -684,14 +773,16 @@
           }
           
           try {
-            console.log('Fetching live bottlenecks data from API');
+            console.log(`Fetching live bottlenecks data from API: ${this.apiBaseUrl}/bottlenecks`);
             // Call the actual Stone API
-            const response = await fetch('/api/bottlenecks', {
+            const response = await fetch(`${this.apiBaseUrl}/bottlenecks`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              }
+              },
+              credentials: this.includeCredentials,
+              mode: this.corsMode
             });
             
             if (!response.ok) {
@@ -715,14 +806,16 @@
           }
           
           try {
-            console.log('Fetching live workflow progress from API');
+            console.log(`Fetching live workflow progress from API: ${this.apiBaseUrl}/workflow-progress`);
             // Call the actual Stone API
-            const response = await fetch('/api/workflow-progress', {
+            const response = await fetch(`${this.apiBaseUrl}/workflow-progress`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              }
+              },
+              credentials: this.includeCredentials,
+              mode: this.corsMode
             });
             
             if (!response.ok) {
@@ -750,14 +843,16 @@
           }
           
           try {
-            console.log('Fetching live repository list from API');
+            console.log(`Fetching live repository list from API: ${this.apiBaseUrl}/repositories`);
             // Call the actual Stone API
-            const response = await fetch('/api/repositories', {
+            const response = await fetch(`${this.apiBaseUrl}/repositories`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-              }
+              },
+              credentials: this.includeCredentials,
+              mode: this.corsMode
             });
             
             if (!response.ok) {

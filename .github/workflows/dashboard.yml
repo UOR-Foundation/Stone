@@ -49,6 +49,43 @@ jobs:
           # Update the title to indicate this is the live version
           sed -i 's/<title>Stone Dashboard<\/title>/<title>Stone Dashboard - Live<\/title>/' _site/index.html
           
+          # Create a config.js file with environment-specific settings
+          cat > _site/config.js << 'ENDCONFIG'
+          // Dashboard configuration for GitHub Pages deployment
+          window.STONE_CONFIG = {
+            // API configuration
+            api: {
+              // Base URL for API requests in production
+              baseUrl: 'https://stone-api.example.com/api',
+              // If using a proxy, specify proxy URL
+              proxyUrl: '',
+              // Whether to use CORS mode for requests
+              corsMode: true,
+              // Whether to include credentials in requests
+              includeCredentials: true
+            },
+            // Feature flags
+            features: {
+              // Enable live mode by default for deployed version
+              liveModeEnabled: false,
+              // Enable authentication
+              authEnabled: true,
+              // Enable analytics
+              analyticsEnabled: true
+            },
+            // GitHub configuration
+            github: {
+              // Default organization or user
+              defaultOrg: 'UOR-Foundation',
+              // Default repository
+              defaultRepo: 'Stone'
+            }
+          };
+          ENDCONFIG
+          
+          # Add the config.js script to the HTML
+          sed -i '/<head>/a \\n  <script src="./config.js"></script>' _site/index.html
+          
           # Create a simple README for the GitHub Pages site
           cat > _site/README.md << 'ENDREADME'
           # Stone Dashboard
