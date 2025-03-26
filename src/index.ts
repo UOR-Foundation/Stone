@@ -214,3 +214,25 @@ export {
   WorkflowDistributor,
   ResourceController
 } from './scalability';
+
+// Export extensibility components
+export {
+  PluginSystem,
+  PluginLoader,
+  PluginManager,
+  CustomRoleRegistry,
+  WorkflowCustomizer,
+  ExtensionManager
+} from './extension';
+
+// Export template components
+export { TemplateSystem } from './templates';
+export type { Template, TemplateVariable } from './templates';
+
+// Export integration components
+export {
+  ExternalToolIntegration,
+  ExtensionAPI,
+  NotificationSystem,
+  DataExchangeManager
+} from './integration';
