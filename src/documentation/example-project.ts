@@ -354,8 +354,9 @@ This example includes several custom roles:
     
     // Get all example directories
     const entries = fs.readdirSync(baseDir, { withFileTypes: true });
+    // Handle both Dirent objects and mock objects from tests
     const examples = entries
-      .filter(entry => entry.isDirectory())
+      .filter(entry => typeof entry.isDirectory === 'function' && entry.isDirectory())
       .map(entry => entry.name);
     
     if (examples.length === 0) {

@@ -42,7 +42,8 @@ describe('Example Project Generator', () => {
       await exampleGenerator.generateBasicExample();
       
       expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(expect.any(Number));
+      // Check if writeFileSync was called
+      expect(fs.writeFileSync).toHaveBeenCalled();
       
       // Check if stone.config.json is created
       expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -67,7 +68,8 @@ describe('Example Project Generator', () => {
       await exampleGenerator.generateAdvancedExample();
       
       expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(expect.any(Number));
+      // Check if writeFileSync was called
+      expect(fs.writeFileSync).toHaveBeenCalled();
       
       // Check if stone.config.json is created with advanced options
       expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -85,7 +87,8 @@ describe('Example Project Generator', () => {
       await exampleGenerator.generateCustomRoleExample();
       
       expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(expect.any(Number));
+      // Check if writeFileSync was called
+      expect(fs.writeFileSync).toHaveBeenCalled();
       
       // Check if custom role file is created
       expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -125,7 +128,11 @@ describe('Example Project Generator', () => {
   describe('generateIndex', () => {
     it('should generate an index file for all examples', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readdirSync as jest.Mock).mockReturnValue(['basic-example', 'advanced-example']);
+      // Mock readdirSync to return objects with isDirectory method
+      (fs.readdirSync as jest.Mock).mockReturnValue([
+        { name: 'basic-example', isDirectory: () => true },
+        { name: 'advanced-example', isDirectory: () => true }
+      ]);
       (fs.statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
       (fs.readFileSync as jest.Mock).mockImplementation((path) => {
         if (path.includes('README.md')) {

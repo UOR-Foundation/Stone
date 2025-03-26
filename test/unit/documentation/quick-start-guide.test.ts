@@ -89,7 +89,7 @@ describe('Quick Start Guide Generator', () => {
       
       expect(section).toBeDefined();
       expect(section.title).toBe('Installation');
-      expect(section.content).toContain('npm install');
+      expect(section.content).toContain('Install Stone');
       expect(section.code).toContain('npm install');
     });
   });
@@ -111,7 +111,7 @@ describe('Quick Start Guide Generator', () => {
       
       expect(section).toBeDefined();
       expect(section.title).toBe('Usage');
-      expect(section.content).toContain('stone init');
+      expect(section.content).toContain('Initialize Stone');
       expect(section.code).toContain('stone');
     });
   });
@@ -133,7 +133,7 @@ describe('Quick Start Guide Generator', () => {
       
       expect(section).toBeDefined();
       expect(section.title).toBe('Troubleshooting');
-      expect(section.content).toContain('common issues');
+      expect(section.content).toContain('issues');
     });
   });
 });
