@@ -110,7 +110,7 @@ jobs:
           sleep 3
           
           # Install tools for API testing
-          npm install -g puppeteer
+          npm install puppeteer
           
           # Create test script
           cat > test-api.js << 'ENDTEST'
@@ -359,6 +359,9 @@ jobs:
           
           # Wait for server to start
           sleep 3
+          
+          # Install Puppeteer for the live test
+          npm install puppeteer
           
           # Test the API using Puppeteer
           cat > test-live-api.js << 'ENDTEST'
