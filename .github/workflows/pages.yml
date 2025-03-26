@@ -38,11 +38,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Create dashboard files
+      - name: Build dashboard static files
         run: |
           mkdir -p dist/dashboard
           
-          # Create index.html
+          # Create index.html directly
           echo "Creating dashboard page"
           cat > dist/dashboard/index.html << 'EOHTML'
 <!DOCTYPE html>
