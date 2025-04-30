@@ -1,10 +1,8 @@
 import { LoggerService } from '../services/logger-service';
-import { trackBatcherMetric } from './metrics-tracker';
-
 type Timeout = ReturnType<typeof setTimeout>;
 
 /**
- * A request to be batched
+ * Request in the batch queue
  */
 export interface BatchRequest<T, R> {
   id: string;
@@ -14,7 +12,7 @@ export interface BatchRequest<T, R> {
 }
 
 /**
- * Configuration for the request batcher
+ * Configuration for the batcher
  */
 export interface BatcherConfig {
   maxBatchSize: number;
@@ -23,73 +21,60 @@ export interface BatcherConfig {
 }
 
 /**
- * Type for the batch processing function
- */
-export type BatchProcessor<T, R> = (requests: BatchRequest<T, R>[]) => Promise<Record<string, R>>;
-
-/**
  * Batches individual requests into grouped API calls for efficiency
  */
-export class RequestBatcher<T, R> {
-  private queue: BatchRequest<T, R>[] = [];
+export class RequestBatcher {
+  private queue: BatchRequest<any, any>[] = [];
   private timer: Timeout | null = null;
   private processing = false;
-  private config: BatcherConfig;
+  private maxBatchSize: number;
+  private batchTimeoutMs: number;
+  private executeBatch: (requests: any[]) => Promise<any[]>;
+  private logger: LoggerService;
 
   constructor(
-    private processor: BatchProcessor<T, R>,
-    private logger: LoggerService,
-    config?: Partial<BatcherConfig>
+    config: {
+      maxBatchSize: number;
+      batchTimeoutMs: number;
+      executeBatch: (requests: any[]) => Promise<any[]>;
+      logger: LoggerService;
+    }
   ) {
-    // Default configuration
-    this.config = {
-      maxBatchSize: 25,
-      maxWaitTimeMs: 100,
-      minWaitTimeMs: 10,
-      ...config
-    };
+    this.maxBatchSize = config.maxBatchSize || 25;
+    this.batchTimeoutMs = config.batchTimeoutMs || 100;
+    this.executeBatch = config.executeBatch;
+    this.logger = config.logger;
   }
 
   /**
-   * Add a request to the batch queue
-   * @param id Unique identifier for the request
-   * @param data Request data
-   * @returns Promise that resolves with the result
+   * Queue a request for batch processing
+   * @param request Request object with id, method, and url
+   * @returns Promise that resolves with the response
    */
-  public async add<Q extends T, S extends R>(id: string, data: Q): Promise<S> {
-    return new Promise<S>((resolve, reject) => {
-      // Add to queue
-      this.queue.push({
-        id,
-        data: data as unknown as T,
-        resolve: (result: R) => resolve(result as unknown as S),
+  public queueRequest(request: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const batchRequest: BatchRequest<any, any> = {
+        id: request.id,
+        data: request,
+        resolve,
         reject
-      });
+      };
       
-      trackBatcherMetric('request_added', {
-        id,
-        queueSize: this.queue.length,
-        timestamp: Date.now()
-      });
+      // Add to queue
+      this.queue.push(batchRequest);
       
-      this.logger.debug(`Added request to batch: ${id}`);
+      if (this.logger && this.logger.debug) {
+        this.logger.debug(`Queued request: ${request.id}, queue size: ${this.queue.length}`);
+      }
       
       // Schedule processing if not already scheduled
       this.scheduleProcessing();
+      
+      // If queue has reached max size, process immediately
+      if (this.queue.length >= this.maxBatchSize) {
+        this.processQueue();
+      }
     });
-  }
-
-  /**
-   * Add multiple requests to the batch queue
-   * @param items Array of [id, data] tuples
-   * @returns Promise that resolves with an array of results
-   */
-  public async addMany<Q extends T, S extends R>(items: [string, Q][]): Promise<S[]> {
-    if (items.length === 0) {
-      return [];
-    }
-    
-    return Promise.all(items.map(([id, data]) => this.add<Q, S>(id, data)));
   }
 
   /**
@@ -103,7 +88,7 @@ export class RequestBatcher<T, R> {
   /**
    * Force immediate processing of the current queue
    */
-  public async flush(): Promise<void> {
+  public async flushQueue(): Promise<void> {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
@@ -111,7 +96,59 @@ export class RequestBatcher<T, R> {
     
     await this.processQueue();
   }
-
+  
+  /**
+   * Cancel a request by ID
+   * @param id ID of the request to cancel
+   * @returns True if request was found and canceled, false otherwise
+   */
+  public cancelRequest(id: number | string): boolean {
+    const idStr = String(id);
+    
+    const index = this.queue.findIndex((req) => {
+      return req.data && String(req.data.id) === idStr;
+    });
+    
+    if (index === -1) {
+      return false;
+    }
+    
+    // Get the request
+    const request = this.queue[index];
+    
+    // Remove the request from the queue
+    this.queue.splice(index, 1);
+    
+    // Reject the promise
+    request.reject(new Error('Request canceled'));
+    
+    return true;
+  }
+  
+  /**
+   * Move a request to the front of the queue
+   * @param id ID of the request to prioritize
+   * @returns True if request was found and prioritized, false otherwise
+   */
+  public prioritizeRequest(id: number | string): boolean {
+    const idStr = String(id);
+    
+    const index = this.queue.findIndex((req) => {
+      return req.data && String(req.data.id) === idStr;
+    });
+    
+    if (index === -1) {
+      return false;
+    }
+    
+    const request = this.queue.splice(index, 1)[0];
+    
+    // Add to front of queue
+    this.queue.unshift(request);
+    
+    return true;
+  }
+  
   /**
    * Schedule the processing of the queue
    */
@@ -121,38 +158,11 @@ export class RequestBatcher<T, R> {
       return;
     }
     
-    // If queue has reached max size, process immediately
-    if (this.queue.length >= this.config.maxBatchSize) {
-      this.logger.debug(`Queue reached max size (${this.config.maxBatchSize}), processing immediately`);
-      this.processQueue();
-      return;
-    }
-    
     // Otherwise schedule processing after the wait time
     this.timer = setTimeout(() => {
       this.timer = null;
       this.processQueue();
-    }, this.calculateWaitTime());
-  }
-
-  /**
-   * Calculate the appropriate wait time based on queue size
-   * @returns Wait time in milliseconds
-   */
-  private calculateWaitTime(): number {
-    const { maxBatchSize, maxWaitTimeMs, minWaitTimeMs = 10 } = this.config;
-    
-    // If queue is empty, use max wait time
-    if (this.queue.length === 0) {
-      return maxWaitTimeMs;
-    }
-    
-    // Adjust wait time based on how full the queue is
-    // Full queue = min wait time, empty queue = max wait time
-    const queueRatio = this.queue.length / maxBatchSize;
-    const waitTime = maxWaitTimeMs - (maxWaitTimeMs - minWaitTimeMs) * queueRatio;
-    
-    return Math.max(minWaitTimeMs, Math.min(maxWaitTimeMs, Math.round(waitTime)));
+    }, this.batchTimeoutMs);
   }
 
   /**
@@ -165,65 +175,49 @@ export class RequestBatcher<T, R> {
     
     this.processing = true;
     
-    trackBatcherMetric('batch_start', {
-      queueSize: this.queue.length,
-      maxBatchSize: this.config.maxBatchSize,
-      timestamp: Date.now()
-    });
-    
     try {
       // Take items from queue (up to max batch size)
-      const batch = this.queue.splice(0, this.config.maxBatchSize);
+      const batch = this.queue.splice(0, this.maxBatchSize);
       
-      this.logger.debug(`Processing batch of ${batch.length} requests`);
-      
-      const startTime = Date.now();
+      if (this.logger && this.logger.debug) {
+        this.logger.debug(`Processing batch of ${batch.length} requests`);
+      }
       
       // Process the batch
-      const results = await this.processor(batch);
-      
-      const processingTime = Date.now() - startTime;
+      const results = await this.executeBatch(batch.map(req => req.data));
       
       // Resolve promises for each request
-      for (const request of batch) {
-        if (request.id in results) {
-          request.resolve(results[request.id]);
+      for (let i = 0; i < batch.length; i++) {
+        const request = batch[i];
+        const result = results[i];
+        
+        if (result && result.error) {
+          request.reject(result.error);
+        } else if (result && result.response) {
+          request.resolve(result.response);
+        } else if (result) {
+          request.resolve(result);
         } else {
           request.reject(new Error(`No result returned for request: ${request.id}`));
         }
       }
       
-      // Track successful batch processing
-      trackBatcherMetric('batch_complete', {
-        batchSize: batch.length,
-        processingTimeMs: processingTime,
-        queueRemaining: this.queue.length,
-        timestamp: Date.now()
-      });
-      
-      this.logger.debug(`Batch processing complete, ${this.queue.length} requests remaining`);
+      if (this.logger && this.logger.debug) {
+        this.logger.debug(`Batch processing complete, ${this.queue.length} requests remaining`);
+      }
     } catch (error: unknown) {
-      this.logger.error('Error processing batch', { error: error instanceof Error ? error.message : String(error) });
-      
-      trackBatcherMetric('batch_error', {
-        error: error instanceof Error ? error.message : String(error),
-        queueSize: this.queue.length,
-        timestamp: Date.now()
-      });
-      
-      // Move failed requests back to the front of the queue
-      // This is a simple retry strategy
-      const failed = this.queue.splice(0, this.config.maxBatchSize);
-      this.queue = [...failed, ...this.queue];
-      
-      // Reject all requests in case of catastrophic failure
-      for (const request of this.queue) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        request.reject(new Error(`Batch processing failed: ${errorMessage}`));
+      if (this.logger && this.logger.error) {
+        this.logger.error('Error processing batch', { error: error instanceof Error ? error.message : String(error) });
       }
       
-      // Clear the queue
-      this.queue = [];
+      // Get the current batch that failed
+      const currentBatch = this.queue.splice(0, this.maxBatchSize);
+      
+      // Reject all requests in the current batch
+      for (const request of currentBatch) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        request.reject(new Error(`Batch execution failed: ${errorMessage}`));
+      }
     } finally {
       this.processing = false;
       

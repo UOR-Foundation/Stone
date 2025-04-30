@@ -230,4 +230,205 @@ export class RepositoryOptimizer {
       return { success: false };
     }
   }
+
+  /**
+   * Analyze a repository to gather statistics
+   * @param repoPath Path to the Git repository
+   * @returns Repository statistics
+   */
+  public async analyzeRepository(repoPath: string): Promise<{
+    objectCount: number;
+    sizeInKb: number;
+    commitCount: number;
+    fileCount: number;
+    packRatio: number;
+  }> {
+    try {
+      // Check if it's a valid repository
+      const isRepo = await this.gitService.isGitRepository(repoPath);
+      if (!isRepo) {
+        throw new Error(`Not a valid Git repository: ${repoPath}`);
+      }
+
+      const countObjectsResult = await this.gitService.execGitCommand(
+        repoPath, ['count-objects', '-v']
+      );
+      
+      const countOutput = countObjectsResult.output;
+      const countMatches = {
+        count: parseInt(countOutput.match(/count: (\d+)/)?.[1] || '0'),
+        size: parseInt(countOutput.match(/size: (\d+)/)?.[1] || '0'),
+        inPack: parseInt(countOutput.match(/in-pack: (\d+)/)?.[1] || '0'),
+        sizePack: parseInt(countOutput.match(/size-pack: (\d+)/)?.[1] || '0'),
+      };
+      
+      const commitCountResult = await this.gitService.execGitCommand(
+        repoPath, ['rev-list', '--count', '--all']
+      );
+      const commitCount = parseInt(commitCountResult.output.trim() || '0');
+      
+      const fileCountResult = await this.gitService.execGitCommand(
+        repoPath, ['ls-files', '|', 'wc', '-l']
+      );
+      const fileCount = parseInt(fileCountResult.output.trim() || '0');
+      
+      const objectCount = countMatches.count + countMatches.inPack;
+      const sizeInKb = countMatches.size + countMatches.sizePack;
+      const packRatio = objectCount > 0 ? countMatches.inPack / objectCount : 0;
+      
+      this.logger.info(`Repository analysis complete: ${repoPath}`);
+      
+      return {
+        objectCount,
+        sizeInKb,
+        commitCount,
+        fileCount,
+        packRatio
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to analyze repository: ${repoPath}`, { error: errorMessage });
+      throw new Error(`Failed to analyze repository: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get the status of Git LFS in a repository
+   * @param repoPath Path to the Git repository
+   * @returns LFS status information
+   */
+  public async getGitLFSStatus(repoPath: string): Promise<{
+    enabled: boolean;
+    objectsToUpload: number;
+    objectsToDownload: number;
+    totalSizeMB: number;
+  }> {
+    try {
+      // Check if LFS is installed
+      try {
+        await this.gitService.execGitCommand(repoPath, ['lfs', 'status']);
+      } catch (error: unknown) {
+        return {
+          enabled: false,
+          objectsToUpload: 0,
+          objectsToDownload: 0,
+          totalSizeMB: 0
+        };
+      }
+      
+      const lfsStatusResult = await this.gitService.execGitCommand(repoPath, ['lfs', 'status']);
+      const statusOutput = lfsStatusResult.output;
+      
+      const uploadMatches = statusOutput.match(/to be pushed/g);
+      const downloadMatches = statusOutput.match(/to be downloaded/g);
+      const sizesMatches = Array.from(statusOutput.matchAll(/(\d+) MB/g));
+      
+      const objectsToUpload = uploadMatches ? uploadMatches.length : 0;
+      const objectsToDownload = downloadMatches ? downloadMatches.length : 0;
+      
+      let totalSizeMB = 0;
+      for (const match of sizesMatches) {
+        totalSizeMB += parseInt(match[1] || '0');
+      }
+      
+      return {
+        enabled: true,
+        objectsToUpload,
+        objectsToDownload,
+        totalSizeMB
+      };
+    } catch (error: unknown) {
+      this.logger.error(`Failed to get LFS status: ${repoPath}`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+      return {
+        enabled: false,
+        objectsToUpload: 0,
+        objectsToDownload: 0,
+        totalSizeMB: 0
+      };
+    }
+  }
+
+  /**
+   * Set up Git LFS for a repository
+   * @param repoPath Path to the Git repository
+   * @param patterns File patterns to track with LFS
+   * @returns Setup result
+   */
+  public async setupGitLFS(repoPath: string, patterns: string[]): Promise<{
+    success: boolean;
+    patterns: string[];
+  }> {
+    try {
+      // Validate patterns
+      if (!patterns || patterns.length === 0) {
+        throw new Error('No patterns provided for LFS setup');
+      }
+      
+      // Install LFS
+      await this.gitService.execGitCommand(repoPath, ['lfs', 'install']);
+      
+      for (const pattern of patterns) {
+        await this.gitService.execGitCommand(repoPath, ['lfs', 'track', pattern]);
+      }
+      
+      this.logger.info(`Git LFS set up for repository: ${repoPath}`, { patterns });
+      
+      return {
+        success: true,
+        patterns
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to set up Git LFS: ${repoPath}`, { error: errorMessage });
+      throw new Error(`Failed to set up Git LFS: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Determine if a repository should use shallow cloning
+   * @param repoPath Path to the Git repository
+   * @param options Optional threshold options
+   * @returns Recommendation for shallow cloning
+   */
+  public async shouldUseShallowClone(
+    repoPath: string,
+    options?: {
+      sizeThresholdKb?: number;
+      commitThreshold?: number;
+    }
+  ): Promise<{
+    recommended: boolean;
+    recommendedDepth?: number;
+    reason?: string;
+  }> {
+    try {
+      const sizeThresholdKb = options?.sizeThresholdKb || 100000; // 100MB
+      const commitThreshold = options?.commitThreshold || 1000;
+      
+      // Analyze the repository
+      const stats = await this.analyzeRepository(repoPath);
+      
+      if (stats.sizeInKb > sizeThresholdKb || stats.commitCount > commitThreshold) {
+        const recommendedDepth = Math.min(100, Math.max(1, Math.floor(stats.commitCount * 0.1)));
+        
+        return {
+          recommended: true,
+          recommendedDepth,
+          reason: `This is a large repository (${Math.round(stats.sizeInKb / 1024)}MB, ${stats.commitCount} commits)`
+        };
+      } else {
+        return {
+          recommended: false,
+          reason: 'Repository is small enough for full clone'
+        };
+      }
+    } catch (error: unknown) {
+      this.logger.warn(`Failed to determine if shallow clone is recommended: ${repoPath}`, {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return { recommended: false };
+    }
+  }
 }
