@@ -1,4 +1,5 @@
 import { LoggerService } from '../services/logger-service';
+import { trackBatcherMetric } from './metrics-server';
 
 type Timeout = ReturnType<typeof setTimeout>;
 
@@ -63,6 +64,12 @@ export class RequestBatcher<T, R> {
         data: data as unknown as T,
         resolve: (result: R) => resolve(result as unknown as S),
         reject
+      });
+      
+      trackBatcherMetric('request_added', {
+        id,
+        queueSize: this.queue.length,
+        timestamp: Date.now()
       });
       
       this.logger.debug(`Added request to batch: ${id}`);
@@ -158,14 +165,24 @@ export class RequestBatcher<T, R> {
     
     this.processing = true;
     
+    trackBatcherMetric('batch_start', {
+      queueSize: this.queue.length,
+      maxBatchSize: this.config.maxBatchSize,
+      timestamp: Date.now()
+    });
+    
     try {
       // Take items from queue (up to max batch size)
       const batch = this.queue.splice(0, this.config.maxBatchSize);
       
       this.logger.debug(`Processing batch of ${batch.length} requests`);
       
+      const startTime = Date.now();
+      
       // Process the batch
       const results = await this.processor(batch);
+      
+      const processingTime = Date.now() - startTime;
       
       // Resolve promises for each request
       for (const request of batch) {
@@ -176,9 +193,23 @@ export class RequestBatcher<T, R> {
         }
       }
       
+      // Track successful batch processing
+      trackBatcherMetric('batch_complete', {
+        batchSize: batch.length,
+        processingTimeMs: processingTime,
+        queueRemaining: this.queue.length,
+        timestamp: Date.now()
+      });
+      
       this.logger.debug(`Batch processing complete, ${this.queue.length} requests remaining`);
     } catch (error: unknown) {
       this.logger.error('Error processing batch', { error: error instanceof Error ? error.message : String(error) });
+      
+      trackBatcherMetric('batch_error', {
+        error: error instanceof Error ? error.message : String(error),
+        queueSize: this.queue.length,
+        timestamp: Date.now()
+      });
       
       // Move failed requests back to the front of the queue
       // This is a simple retry strategy

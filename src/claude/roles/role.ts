@@ -3,14 +3,16 @@ import { ClaudeContext, ContextProvider } from '../context/provider';
 import { ResponseParser } from '../parsers/response-parser';
 import { ConfigLoader } from '../../config';
 import { GitHubClient } from '../../github';
-import { Logger } from '../../utils/logger';
+import { LoggerService } from '../../services/logger-service';
+import { SecretRedaction } from '../../security/secret-redaction';
 
 export abstract class Role {
   protected claudeClient: ClaudeClient;
   protected contextProvider: ContextProvider;
   protected responseParser: ResponseParser;
-  protected logger: Logger;
+  protected logger: LoggerService;
   protected githubClient: GitHubClient | null = null;
+  protected secretRedaction: SecretRedaction;
   
   abstract name: string;
   
@@ -18,7 +20,8 @@ export abstract class Role {
     this.claudeClient = new ClaudeClient(token);
     this.contextProvider = new ContextProvider(token);
     this.responseParser = new ResponseParser();
-    this.logger = new Logger();
+    this.logger = new LoggerService();
+    this.secretRedaction = new SecretRedaction(this.logger);
   }
   
   /**
@@ -48,8 +51,10 @@ export abstract class Role {
       // Generate response from Claude
       const response = await this.claudeClient.generateResponse(prompt, systemPrompt);
       
+      const redactedResponse = this.secretRedaction.redact(response);
+      
       // Add comment to the issue
-      await this.addCommentToIssue(issueNumber, response);
+      await this.addCommentToIssue(issueNumber, redactedResponse);
       
       this.logger.info(`${this.name} role processed issue #${issueNumber}`);
     } catch (error) {
@@ -113,7 +118,9 @@ export abstract class Role {
   protected async addCommentToIssue(issueNumber: number, response: string): Promise<void> {
     const githubClient = await this.initializeGitHubClient();
     
-    const commentBody = `## ${this.name.toUpperCase()} Role Response\n\n${response}`;
+    const redactedResponse = this.secretRedaction.redact(response);
+    
+    const commentBody = `## ${this.name.toUpperCase()} Role Response\n\n${redactedResponse}`;
     
     await githubClient.createIssueComment(issueNumber, commentBody);
   }

@@ -197,6 +197,23 @@ export interface StoneConfig {
     };
     categories: string[];
   };
+  rbac?: {
+    roles: Record<string, {
+      files: {
+        read: string[];
+        write: string[];
+      };
+      github: {
+        issues: string[];
+        pullRequests: string[];
+        branches: string[];
+        [key: string]: string[];
+      };
+      workflow: {
+        execute: string[];
+      };
+    }>;
+  };
   teams?: Array<{
     name: string;
     areas?: string[];
