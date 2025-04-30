@@ -32,7 +32,8 @@ export class QARole extends Role {
     prompt += '\n3. Identify which packages are involved';
     prompt += '\n4. Provide code blocks for unit, integration, and end-to-end tests';
     prompt += '\n5. List the file paths where tests should be created';
-    prompt += '\n6. Provide a test command to run the tests';
+    prompt += '\n6. Provide specific test commands to run the tests';
+    prompt += '\n7. Include test coverage requirements';
     
     // Find Gherkin spec in issue comments
     if (context.issue) {

@@ -33,6 +33,7 @@ export class ActionsRole extends Role {
     prompt += '\n4. Ensure workflows integrate with Stone automation';
     prompt += '\n5. Provide workflow file content in code blocks';
     prompt += '\n6. List the file paths where workflows should be created';
+    prompt += '\n7. Ensure proper environment variables and secrets are used';
     
     // Find the QA test information in issue comments
     if (context.issue && context.repository) {
