@@ -45,6 +45,9 @@ jobs:
     - name: Install dependencies
       run: pnpm install
       
+    - name: RBAC Check
+      run: pnpm stone rbac:check --diff origin/main...HEAD
+      
     - name: Build
       run: pnpm build
       
