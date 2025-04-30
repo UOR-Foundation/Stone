@@ -1,184 +1,116 @@
 # Stone Implementation Plan
 
-This implementation plan outlines a phased approach to developing the Stone software factory, a structured system for orchestrating GitHub-based development using Claude Code. The plan is organized into discrete phases, each building upon the previous one to create a complete implementation.
+This document outlines the architecture and implementation details of the Stone framework.
 
-## Phase 1: Core Infrastructure & Configuration
+## Architecture Overview
 
-### 1.1 Project Setup
-- Initialize npm package with TypeScript configuration
-- Setup linting, testing, and build infrastructure
-- Establish project structure with appropriate directories
+Stone is a TypeScript/Node.js "software factory" for orchestrating GitHub-based development using Claude AI. It breaks down feature work into specialized roles with clear responsibilities and a standardized workflow.
 
-### 1.2 Configuration System
-- Implement `stone.config.json` schema
-- Develop configuration loader with validation
-- Create configuration generator for initialization
-- Implement repository structure analyzer for auto-detection
+The main components of Stone are:
 
-### 1.3 GitHub API Integration
-- Implement GitHub API client using Octokit
-- Build authentication system for GitHub tokens
-- Develop issue and PR management utilities
-- Implement label and assignment utilities
+1. **Roles**: Specialized roles (PM, QA, Feature Developer, Auditor, Actions Runner) with defined responsibilities.
+2. **Config**: Configuration management for Stone projects.
+3. **GitHub Client**: Wrapper around Octokit for GitHub API interactions.
+4. **Workflow Engine**: Orchestrates the workflow between roles.
+5. **GitHub Actions**: Generates and manages GitHub Actions workflows.
+6. **Webhook Handler**: Processes GitHub webhook events.
+7. **Performance**: Rate limiting and request batching for API calls.
+8. **Security**: Access control and security features.
+9. **CLI**: Command-line interface for Stone operations.
 
-### 1.4 CLI Foundation
-- Create command-line interface structure
-- Implement `init` command
-- Implement basic status commands
-- Establish logging infrastructure
+## Component Implementation
 
-## Phase 2: Role-Based Infrastructure
+### Roles
 
-### 2.1 Claude Code Integration
-- Implement Claude Code file generator for each role
-- Develop Claude Code API client
-- Create context management for Claude Code interactions
-- Implement response parsers for Claude Code output
+Each role is implemented as a class extending the base `Role` class:
 
-### 2.2 Role Template Development
-- Create base templates for each role:
-  - Product Manager (PM)
-  - QA Team
-  - Feature Teams
-  - Auditor
-  - GitHub Actions Team
-- Define standard response formats for each role
-- Implement role-specific permission boundaries
+- **PM Role**: Creates Gherkin specifications based on issue descriptions.
+- **QA Role**: Creates test files based on Gherkin specifications.
+- **Feature Role**: Implements features based on specifications and tests.
+- **Auditor Role**: Verifies implementations against specifications and tests.
+- **Actions Role**: Creates GitHub Actions workflows for CI/CD.
 
-### 2.3 Role Orchestration System
-- Develop role dispatcher based on issue labels
-- Implement context providers for each role
-- Create workflow state tracking between roles
-- Build error handling for role communication failures
+Each role has a specific prompt template for Claude AI and handles its part of the workflow.
 
-## Phase 3: Workflow Implementation
+### Config
 
-### 3.1 Issue Processing
-- Implement issue template system
-- Develop Gherkin specification generation for PM role
-- Build issue labeling and assignment pipeline
-- Create issue history tracking
+The configuration system consists of:
 
-### 3.2 Test Framework Integration
-- Implement test file generation for QA role
-- Develop test location determination logic
-- Build test command generation
-- Implement test failure analysis
+- **Schema**: Defines the structure and validation rules for the configuration.
+- **Loader**: Loads and validates configuration files.
+- **Generator**: Generates default configurations based on repository analysis.
+- **Analyzer**: Analyzes repository structure for configuration generation.
 
-### 3.3 Feature Implementation Workflow
-- Develop package mapping system for feature teams
-- Implement feature implementation request processing
-- Build dependency tracking between packages
-- Create implementation status tracking
+### GitHub Client
 
-### 3.4 Audit System
-- Implement audit criteria evaluation
-- Develop implementation verification system
-- Build code quality validation
-- Create audit result processing
+The GitHub client wraps Octokit to provide:
 
-## Phase 4: GitHub Actions Integration
+- Issue and PR management
+- Comment and label operations
+- File content operations
+- Repository information retrieval
 
-### 4.1 GitHub Workflow Generation
-- Implement GitHub Actions workflow file generator
-- Develop GitHub Actions configuration system
-- Build workflow customization options
-- Create workflow update mechanisms
+### Workflow Engine
 
-### 4.2 Event-Driven Architecture
-- Implement webhook handler for GitHub events
-- Develop event processing pipeline
-- Build event filtering system
-- Create event retry mechanism with backoff
+The workflow engine orchestrates the process:
 
-### 4.3 CI/CD Integration
-- Implement test execution pipeline
-- Develop build process integration
-- Build deployment workflow connections
-- Create status reporting system
+- **StoneWorkflow**: Main class for workflow orchestration.
+- **ConflictResolution**: Handles merge conflicts.
+- **FeedbackHandler**: Processes feedback on issues.
+- **DocsManager**: Manages documentation updates.
+- **ErrorRecovery**: Handles workflow errors.
 
-## Phase 5: Advanced Features
+### GitHub Actions
 
-### 5.1 Merge Conflict Resolution
-- Implement conflict detection system
-- Develop automated conflict resolution for PM role
-- Build rebase workflow
-- Create merge status tracking
+GitHub Actions integration includes:
 
-### 5.2 User Feedback Handling
-- Implement PR comment analysis
-- Develop feedback issue generation
-- Build feedback routing system
-- Create feedback prioritization
+- **WorkflowGenerator**: Generates GitHub Actions workflow files.
+- **Webhook Handler**: Processes GitHub webhook events.
 
-### 5.3 Documentation Management
-- Implement documentation update system for PM role
-- Develop documentation generation from code
-- Build documentation verification
-- Create documentation publishing workflow
+### Performance
 
-### 5.4 Error Recovery System
-- Implement comprehensive error handling
-- Develop workflow recovery mechanisms
-- Build error notification system
-- Create manual intervention tools
+Performance optimizations include:
 
-## Phase 6: Security & Performance
+- **RateLimiter**: Implements token bucket algorithm for API rate limiting.
+- **RequestBatcher**: Batches individual requests into grouped API calls.
 
-### 6.1 Security Enhancements
-- Implement secure token management
-- Develop role-based access control enforcement
-- Build sensitive data filtering
-- Create security audit logging
+### Security
 
-### 6.2 Performance Optimization
-- Implement API rate limit management
-- Develop request batching for GitHub API
-- Build parallel processing where applicable
-- Create performance monitoring
+Security features include:
 
-### 6.3 Scalability Improvements
-- Implement large repository optimizations
-- Develop multi-repository support
-- Build workflow distribution capabilities
-- Create resource usage controls
+- **AccessControlManager**: Role-based access control for files and operations.
+- **SecretRedaction**: Redacts secrets from text.
+- **MergeProtection**: Enforces merge protections.
 
-## Phase 7: Extensibility & Customization
+### CLI
 
-### 7.1 Extension System
-- Implement plugin architecture
-- Develop custom role support
-- Build workflow step customization
-- Create extension management
+The CLI provides commands for:
 
-### 7.2 Custom Templates
-- Implement template customization system
-- Develop template variables and placeholders
-- Build template inheritance
-- Create template validation
+- **init**: Initialize Stone configuration.
+- **process**: Process an issue with Stone.
+- **status**: Show status of Stone issues.
+- **run**: Run a specific workflow.
+- **reset**: Reset Stone labels on an issue.
+- **actions**: Generate GitHub Actions workflows.
+- **dashboard**: Start a web dashboard for Stone.
 
-### 7.3 Integration Capabilities
-- Implement external tool integration
-- Develop API for third-party extensions
-- Build notification system integrations
-- Create data export/import capabilities
+## Extension Points
 
-## Phase 8: User Experience
+Stone is designed to be extensible through:
 
-### 8.1 Status Reporting
-- Implement comprehensive status dashboard
-- Develop issue progress visualization
-- Build performance analytics
-- Create workflow bottleneck identification
+1. **Custom Roles**: Add new roles by extending the base `Role` class.
+2. **Workflow Customization**: Customize the workflow by modifying the `StoneWorkflow` class.
+3. **Prompt Templates**: Customize Claude AI prompts for each role.
+4. **GitHub Actions**: Customize GitHub Actions workflows.
 
-### 8.2 Documentation & Examples
-- Implement comprehensive documentation
-- Develop quick-start guides
-- Build example projects
-- Create video tutorials
+## Testing Strategy
 
-### 8.3 Usability Improvements
-- Implement interactive CLI with prompts
-- Develop error recovery guidance
-- Build configuration wizards
-- Create troubleshooting tools
+Stone includes comprehensive testing:
+
+1. **Unit Tests**: Test individual components in isolation.
+2. **Integration Tests**: Test interactions between components.
+3. **End-to-End Tests**: Test the complete workflow.
+
+## Deployment
+
+Stone is deployed as an npm package and can be installed globally or as a project dependency.

@@ -1,60 +1,92 @@
-# Stone - A Software Factory for GitHub
+# Stone
 
-Stone is a structured system for orchestrating GitHub-based development using Claude Code. It manages the software development process through specialized roles, each with defined responsibilities and boundaries.
+Stone is a structured system for orchestrating GitHub-based development using Claude Code. It emphasizes role-based development with defined responsibilities and boundaries.
 
 [![Tests](https://github.com/uor-foundation/stone/actions/workflows/test.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/test.yml)
 [![PR Checks](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml)
 
-## Overview
+## Features
 
-Stone helps manage large codebases by breaking down feature implementation into discrete steps with clear ownership:
-
-- **Role-Based Development**: Different Claude Code instances handle specific roles in the development process
-- **Defined Workflow**: Standardized sequence of steps for feature implementation
-- **Bounded Context**: Each role operates within appropriate context boundaries
-- **GitHub Native**: Uses GitHub issues, PRs, comments, and actions for all workflows
+* **Role-Based Development**: Specialized roles (PM, QA, Feature Developer, Auditor, GitHub Actions Runner) with defined responsibilities.
+* **Structured Workflow**: Standardized workflow for feature development.
+* **GitHub Integration**: Seamless integration with GitHub issues, pull requests, and actions.
+* **Claude AI Integration**: Leverages Claude AI for each role's tasks.
 
 ## Installation
 
 ```bash
+# Install globally
+npm install -g @uor-foundation/stone
+
+# Or install as a project dependency
 npm install --save-dev @uor-foundation/stone
 ```
 
 ## Usage
 
-Initialize Stone in your repository:
+### Initialize Stone
 
 ```bash
+# Initialize Stone in your repository
 npx stone init
 ```
 
-Process a specific issue:
+This will create a `stone.config.json` file in your repository with default settings.
+
+### Process an Issue
 
 ```bash
+# Process an issue with Stone
 npx stone process --issue 123
 ```
 
-View status of all Stone issues:
+This will process the issue with the appropriate role based on its labels.
+
+### Run a Specific Workflow
 
 ```bash
+# Run a specific workflow
+npx stone run --workflow pm --issue 123
+```
+
+This will run the PM workflow for the specified issue.
+
+### Show Status
+
+```bash
+# Show status of Stone issues
 npx stone status
 ```
 
+This will show the status of all Stone issues in the repository.
+
+### Generate GitHub Actions Workflows
+
+```bash
+# Generate GitHub Actions workflows
+npx stone actions
+```
+
+This will generate GitHub Actions workflows for Stone.
+
+### Start Dashboard
+
+```bash
+# Start the Stone dashboard
+npx stone dashboard
+```
+
+This will start a web dashboard for Stone.
+
 ## Documentation
 
-See [stone-spec.md](stone-spec.md) for detailed documentation.
+For detailed documentation, see [stone-spec.md](stone-spec.md) and [docs/implementation-plan.md](docs/implementation-plan.md).
 
 ## Contributing
 
-We welcome contributions to Stone! To contribute:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-All PRs will run automatic tests and code quality checks.
+All pull requests will undergo automatic tests and code quality checks.
 
 ## License
 
