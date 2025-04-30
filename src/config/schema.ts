@@ -243,3 +243,16 @@ export function validateConfig(config: any): { isValid: boolean; errors: string[
 
   return { isValid: true, errors: [] };
 }
+
+/**
+ * Validate a configuration object against the schema without applying defaults
+ * @param config Configuration object to validate
+ * @returns Validation result with value and error if any
+ */
+export function validateConfigNoDefaults(config: any): { value: any; error: any } {
+  return configSchema.validate(config, {
+    abortEarly: false,
+    allowUnknown: false,
+    noDefaults: true
+  });
+}

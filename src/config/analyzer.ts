@@ -58,13 +58,12 @@ export class RepositoryAnalyzer {
                 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
                 const packageName = packageJson.name || pkgDir;
                 
-                const dependencies = this.extractDependencies(packageJson);
+                this.extractDependencies(packageJson);
                 
                 packages.push({
                   name: packageName,
                   path: `packages/${pkgDir}`,
                   team: `team-${pkgDir}`,
-                  dependencies,
                 });
                 
                 this.logger.info(`Added package: ${packageName} at packages/${pkgDir}`);
@@ -103,13 +102,12 @@ export class RepositoryAnalyzer {
             const packageJson = JSON.parse(fs.readFileSync(rootPackageJson, 'utf8'));
             const packageName = packageJson.name || path.basename(this.repositoryPath);
             
-            const dependencies = this.extractDependencies(packageJson);
+            this.extractDependencies(packageJson);
             
             packages.push({
               name: packageName,
               path: '.',
               team: 'core-team',
-              dependencies,
             });
             
             this.logger.info(`Added root package: ${packageName}`);

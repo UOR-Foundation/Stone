@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { configSchema, StoneConfig, validateConfig } from './schema';
+import { configSchema, StoneConfig, validateConfig, validateConfigNoDefaults } from './schema';
 import { Logger } from '../utils/logger';
 
 /**
@@ -52,15 +52,12 @@ export class ConfigLoader {
         throw new Error(`Invalid JSON in configuration file: ${error instanceof Error ? error.message : String(error)}`);
       }
 
-      // Validate against schema
+      // Validate against schema without applying defaults
       this.logger.info('Validating configuration against schema');
-      const { error, value } = configSchema.validate(parsedConfig, {
-        abortEarly: false,
-        allowUnknown: false,
-      });
+      const { error, value } = validateConfigNoDefaults(parsedConfig);
 
       if (error) {
-        const errorDetails = error.details.map(detail => detail.message).join(', ');
+        const errorDetails = error.details.map((detail: { message: string }) => detail.message).join(', ');
         this.logger.error(`Configuration validation failed: ${errorDetails}`);
         throw new Error(`Configuration validation failed: ${errorDetails}`);
       }

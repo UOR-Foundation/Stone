@@ -129,6 +129,17 @@ describe('ConfigGenerator', () => {
         },
       };
       
+      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
+        if (path.includes('.github/stone') || 
+            path.includes('.github/workflows') || 
+            path.includes('.github/ISSUE_TEMPLATE') || 
+            path.includes('docs') || 
+            path.includes('docs/api')) {
+          return false;
+        }
+        return true;
+      });
+      
       await generator.createDirectories(config);
       
       expect(fs.mkdirSync).toHaveBeenCalledWith(

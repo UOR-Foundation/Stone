@@ -69,7 +69,7 @@ export class ClaudeClient {
     try {
       this.logger.info('Generating Claude response');
       
-      if (process.env.NODE_ENV === 'test' || process.env.MOCK_CLAUDE === 'true') {
+      if (process.env.MOCK_CLAUDE === 'true' && process.env.NODE_ENV !== 'test') {
         this.logger.info('Using mock Claude response');
         return `This is a mock response from Claude.\n\nPrompt received: ${prompt.substring(0, 100)}...\n\nSystem prompt received: ${systemPrompt?.substring(0, 100) || 'None'}...`;
       }
