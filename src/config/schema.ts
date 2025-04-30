@@ -1,9 +1,14 @@
 import Joi from 'joi';
 
+/**
+ * Joi schema for Stone configuration validation
+ */
 export const configSchema = Joi.object({
   repository: Joi.object({
     owner: Joi.string().required(),
     name: Joi.string().required(),
+    path: Joi.string().optional(),
+    defaultBranch: Joi.string().optional().default('main'),
   }).required(),
   
   packages: Joi.array().items(
@@ -11,6 +16,7 @@ export const configSchema = Joi.object({
       name: Joi.string().required(),
       path: Joi.string().required(),
       team: Joi.string().required(),
+      dependencies: Joi.array().items(Joi.string()).optional(),
     })
   ).required(),
   
@@ -20,6 +26,17 @@ export const configSchema = Joi.object({
     useWebhooks: Joi.boolean().default(true),
     testCommand: Joi.string().default('npm test'),
     timeoutMinutes: Joi.number().default(30),
+    issuePrefix: Joi.string().optional().default('stone-'),
+    branchPrefix: Joi.string().optional().default('stone/'),
+    useLabels: Joi.boolean().optional().default(true),
+    stages: Joi.array().items(Joi.string()).optional().default([
+      'process',
+      'qa',
+      'feature-implement',
+      'audit',
+      'actions',
+      'complete'
+    ]),
   }).default(),
   
   github: Joi.object({
@@ -32,8 +49,57 @@ export const configSchema = Joi.object({
     minCodeCoverage: Joi.number().default(80),
     requiredReviewers: Joi.number().default(1),
     maxComplexity: Joi.number().default(20),
-    qualityChecks: Joi.array().items(Joi.string()).default(['lint', 'types', 'tests'])
+    qualityChecks: Joi.array().items(Joi.string()).default(['lint', 'types', 'tests']),
   }).default(),
+  
+  branches: Joi.object({
+    main: Joi.string().default('main'),
+    prefix: Joi.string().default('stone/'),
+  }).optional(),
+  
+  documentation: Joi.object({
+    directory: Joi.string().default('docs'),
+    apiDocsDirectory: Joi.string().default('docs/api'),
+    readmeFile: Joi.string().default('README.md'),
+    outputDir: Joi.string().optional(),
+    examplesDir: Joi.string().optional(),
+  }).optional(),
+  
+  claude: Joi.object({
+    apiKey: Joi.string().optional(),
+    endpoint: Joi.string().optional().default('https://api.anthropic.com/v1/messages'),
+    model: Joi.string().optional().default('claude-3-sonnet-20240229'),
+  }).optional(),
+  
+  errorRecovery: Joi.object({
+    includeStackTrace: Joi.boolean().default(false),
+    retryAttempts: Joi.number().default(3),
+    notifyOnError: Joi.boolean().default(true),
+    errorTypes: Joi.object().pattern(
+      Joi.string(),
+      Joi.string()
+    ).default({
+      'API_ERROR': 'GitHub API error',
+      'VALIDATION_ERROR': 'Configuration validation error',
+      'PROCESS_ERROR': 'Process execution error',
+    }),
+  }).optional(),
+  
+  feedback: Joi.object({
+    priorityLabels: Joi.object({
+      high: Joi.string().default('priority-high'),
+      medium: Joi.string().default('priority-medium'),
+      low: Joi.string().default('priority-low'),
+    }).default(),
+    categories: Joi.array().items(Joi.string()).default(['bug', 'feature', 'enhancement', 'documentation']),
+  }).optional(),
+  
+  teams: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required(),
+      areas: Joi.array().items(Joi.string()).optional(),
+    })
+  ).optional(),
   
   roles: Joi.object({
     pm: Joi.object({
@@ -63,6 +129,9 @@ export const configSchema = Joi.object({
   }).default(),
 }).required();
 
+/**
+ * Stone configuration interface
+ */
 export interface StoneConfig {
   repository: {
     owner: string;
@@ -154,4 +223,23 @@ export interface StoneConfig {
       claudeFile: string;
     };
   };
+}
+
+/**
+ * Validate a configuration object against the schema
+ * @param config Configuration object to validate
+ * @returns Validation result with errors if any
+ */
+export function validateConfig(config: any): { isValid: boolean; errors: string[] } {
+  const { error } = configSchema.validate(config, {
+    abortEarly: false,
+    allowUnknown: false,
+  });
+
+  if (error) {
+    const errors = error.details.map(detail => detail.message);
+    return { isValid: false, errors };
+  }
+
+  return { isValid: true, errors: [] };
 }
