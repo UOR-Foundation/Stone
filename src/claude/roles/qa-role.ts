@@ -64,7 +64,7 @@ export class QARole extends Role {
           }
         }
       } catch (error) {
-        this.logger.warning(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     

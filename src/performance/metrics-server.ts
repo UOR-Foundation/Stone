@@ -1,13 +1,12 @@
 import { RateLimiter } from './rate-limiter';
 import { RequestBatcher } from './request-batcher';
 import { LoggerService } from '../services/logger-service';
+import { trackRateLimiterMetric, trackBatcherMetric, getRateLimiterMetrics, getBatcherMetrics } from './metrics-tracker';
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
 import os from 'os';
 
-let rateLimiterMetrics: any[] = [];
-let batcherMetrics: any[] = [];
 let systemMetrics: any[] = [];
 
 const logger = new LoggerService();
@@ -16,35 +15,6 @@ const batcher = new RequestBatcher(async () => ({}), logger);
 
 let server: http.Server | null = null;
 
-/**
- * Track rate limiter metrics
- */
-export function trackRateLimiterMetric(name: string, data: any): void {
-  rateLimiterMetrics.push({
-    timestamp: Date.now(),
-    name,
-    ...data
-  });
-  
-  if (rateLimiterMetrics.length > 100) {
-    rateLimiterMetrics = rateLimiterMetrics.slice(-100);
-  }
-}
-
-/**
- * Track request batcher metrics
- */
-export function trackBatcherMetric(name: string, data: any): void {
-  batcherMetrics.push({
-    timestamp: Date.now(),
-    name,
-    ...data
-  });
-  
-  if (batcherMetrics.length > 100) {
-    batcherMetrics = batcherMetrics.slice(-100);
-  }
-}
 
 /**
  * Get system metrics
@@ -138,7 +108,7 @@ export function startMetricsServer(port: number = 9000): void {
       res.json(metrics);
     } catch (error) {
       logger.error(`Error serving metrics: ${error instanceof Error ? error.message : String(error)}`);
-      res.status(500).json({ error: 'Failed to retrieve metrics' });
+      return res.status(500).json({ error: 'Failed to retrieve metrics' });
     }
   });
   

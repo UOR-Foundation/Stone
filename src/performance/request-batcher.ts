@@ -1,5 +1,5 @@
 import { LoggerService } from '../services/logger-service';
-import { trackBatcherMetric } from './metrics-server';
+import { trackBatcherMetric } from './metrics-tracker';
 
 type Timeout = ReturnType<typeof setTimeout>;
 

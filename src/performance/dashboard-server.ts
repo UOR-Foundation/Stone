@@ -1,8 +1,75 @@
 import { RateLimiter } from './rate-limiter';
 import { RequestBatcher } from './request-batcher';
 import { Logger } from '../utils/logger';
+import { LoggerService } from '../services/logger-service';
+import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import cors from 'cors';
+
+let server: any = null;
+let dashboardInstance: DashboardServer | null = null;
+
+/**
+ * Start the dashboard server
+ */
+export function startDashboardServer(port: number = 3000): void {
+  try {
+    const app = express();
+    const logger = new LoggerService();
+    
+    app.use(cors());
+    
+    dashboardInstance = new DashboardServer();
+    dashboardInstance.initialize();
+    
+    const dashboardPath = path.join(process.cwd(), 'dist', 'dashboard');
+    app.use(express.static(dashboardPath));
+    
+    app.get('/', (req, res) => {
+      const indexPath = path.join(dashboardPath, 'index.html');
+      
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send('Dashboard not built. Run `pnpm build:dashboard` first.');
+      }
+    });
+    
+    app.get('/health', (req, res) => {
+      res.json({ status: 'ok' });
+    });
+    
+    app.get('*', (req, res) => {
+      const indexPath = path.join(dashboardPath, 'index.html');
+      
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send('Dashboard not built. Run `pnpm build:dashboard` first.');
+      }
+    });
+    
+    server = app.listen(port, () => {
+      logger.info(`Dashboard server started on port ${port}`);
+    });
+  } catch (error) {
+    const logger = new LoggerService();
+    logger.error(`Error starting dashboard server: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Stop the dashboard server
+ */
+export function stopDashboardServer(): void {
+  if (server) {
+    server.close();
+    server = null;
+    const logger = new LoggerService();
+    logger.info('Dashboard server stopped');
+  }
+}
 
 /**
  * Interface for API request
@@ -30,7 +97,7 @@ export interface DashboardApiResponse {
 export class DashboardServer {
   private logger: Logger;
   private rateLimiter?: RateLimiter;
-  private requestBatcher?: RequestBatcher;
+  private requestBatcher?: RequestBatcher<unknown, unknown>;
   
   constructor() {
     this.logger = new Logger();
@@ -41,16 +108,15 @@ export class DashboardServer {
    */
   public async initialize(): Promise<void> {
     try {
-      const rateLimiterModule = await import('./rate-limiter');
-      const batcherModule = await import('./request-batcher');
+      const { LoggerService } = await import('../services/logger-service');
+      const loggerService = new LoggerService();
       
-      if (rateLimiterModule.RateLimiter.getInstance) {
-        this.rateLimiter = rateLimiterModule.RateLimiter.getInstance();
-      }
+      const { RateLimiter } = await import('./rate-limiter');
+      this.rateLimiter = new RateLimiter(loggerService);
       
-      if (batcherModule.RequestBatcher.getInstance) {
-        this.requestBatcher = batcherModule.RequestBatcher.getInstance();
-      }
+      const { RequestBatcher } = await import('./request-batcher');
+      const dummyProcessor = async () => ({});
+      this.requestBatcher = new RequestBatcher<unknown, unknown>(dummyProcessor, loggerService);
     } catch (error) {
       this.logger.error(`Failed to initialize dashboard server: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -109,15 +175,35 @@ export class DashboardServer {
    */
   private async handleMetricsRequest(req: DashboardApiRequest): Promise<DashboardApiResponse> {
     try {
+      let rateUsed = 0;
+      let rateLimit = 0;
+      let batchQueued = 0;
+      let batchMax = 0;
+      
+      if (this.rateLimiter) {
+        const limits = this.rateLimiter.getLimits();
+        const firstLimitKey = Object.keys(limits)[0];
+        if (firstLimitKey) {
+          const limit = limits[firstLimitKey];
+          rateUsed = limit.used;
+          rateLimit = limit.maxRequests;
+        }
+      }
+      
+      if (this.requestBatcher) {
+        batchQueued = this.requestBatcher.getQueueSize();
+        batchMax = 25; // Default value from RequestBatcher constructor
+      }
+      
       const metrics = {
-        rate: this.rateLimiter ? {
-          used: this.rateLimiter.getUsedRequests(),
-          limit: this.rateLimiter.getRequestLimit()
-        } : { used: 0, limit: 0 },
-        batch: this.requestBatcher ? {
-          queued: this.requestBatcher.getQueueSize(),
-          max: this.requestBatcher.getMaxBatchSize()
-        } : { queued: 0, max: 0 },
+        rate: {
+          used: rateUsed,
+          limit: rateLimit
+        },
+        batch: {
+          queued: batchQueued,
+          max: batchMax
+        },
         timestamp: Date.now()
       };
       

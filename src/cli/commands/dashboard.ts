@@ -20,7 +20,7 @@ export function createDashboardCommand(): Command {
     .option('-p, --performance', 'Show detailed performance analytics')
     .option('-w, --workflow', 'Show workflow graph')
     .option('-s, --server', 'Start the dashboard web server')
-    .option('-port, --port <number>', 'Port for the dashboard server', '3000')
+    .option('-P, --port <number>', 'Port for the dashboard server', '3000')
     .option('-o, --open', 'Open the dashboard in the default browser')
     .action(async (options) => {
       const logger = new Logger();

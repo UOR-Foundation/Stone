@@ -1,6 +1,6 @@
 import { LoggerService } from '../services/logger-service';
 import * as NodeJS from 'node:timers';
-import { trackRateLimiterMetric } from './metrics-server';
+import { trackRateLimiterMetric } from './metrics-tracker';
 
 /**
  * Rate limit configuration
