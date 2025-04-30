@@ -1,6 +1,6 @@
 import { GitHubClient } from '../github/client';
 import { StoneConfig } from '../config/schema';
-import { LoggerService } from '../services/logger-service';
+import { Logger } from '../utils/logger';
 
 /**
  * Protection rule result
@@ -23,14 +23,13 @@ export interface MergeCheckResult {
  * Enforces merge protections
  */
 export class MergeProtection {
-  private logger: LoggerService;
+  private logger: Logger;
 
   constructor(
     private client: GitHubClient,
-    private config: StoneConfig,
-    logger: LoggerService
+    private config: StoneConfig
   ) {
-    this.logger = logger;
+    this.logger = new Logger();
   }
 
   /**
@@ -60,9 +59,13 @@ export class MergeProtection {
         });
       }
       
-      const reviews = await this.client.getPullRequestReviews(prNumber);
+      const { data: reviews } = await this.client.octokit.rest.pulls.listReviews({
+        owner: this.config.repository.owner,
+        repo: this.config.repository.name,
+        pull_number: prNumber
+      });
       
-      const approvedReviews = reviews.filter(review => review.state === 'APPROVED');
+      const approvedReviews = reviews.filter((review: { state: string }) => review.state === 'APPROVED');
       
       const requiredReviewers = this.config.audit?.requiredReviewers || 1;
       
@@ -75,7 +78,11 @@ export class MergeProtection {
           : `PR needs ${requiredReviewers} approved reviews, has ${approvedReviews.length}`
       });
       
-      const statuses = await this.client.getCommitStatuses(pr.head.sha);
+      const { data: statuses } = await this.client.octokit.rest.repos.getCombinedStatusForRef({
+        owner: this.config.repository.owner,
+        repo: this.config.repository.name,
+        ref: pr.head.sha
+      });
       
       const ciPassed = statuses.state === 'success';
       rules.push({
@@ -120,11 +127,20 @@ export class MergeProtection {
     try {
       const rules: ProtectionRuleResult[] = [];
       
-      const protection = await this.client.getBranchProtection(
-        this.config.repository.owner,
-        this.config.repository.name,
-        branchName
-      );
+      let protection;
+      try {
+        const { data } = await this.client.octokit.rest.repos.getBranchProtection({
+          owner: this.config.repository.owner,
+          repo: this.config.repository.name,
+          branch: branchName
+        });
+        protection = data;
+      } catch (error) {
+        if ((error as any).status === 404) {
+          return [];
+        }
+        throw error;
+      }
       
       if (!protection) {
         rules.push({
@@ -184,25 +200,23 @@ export class MergeProtection {
       const requiredReviewers = this.config.audit?.requiredReviewers || 1;
       const requiredChecks = this.config.audit?.qualityChecks || ['lint', 'tests'];
       
-      await this.client.updateBranchProtection(
-        this.config.repository.owner,
-        this.config.repository.name,
-        branchName,
-        {
-          required_status_checks: {
-            strict: true,
-            contexts: requiredChecks
-          },
-          enforce_admins: false,
-          required_pull_request_reviews: {
-            dismissal_restrictions: {},
-            dismiss_stale_reviews: true,
-            require_code_owner_reviews: false,
-            required_approving_review_count: requiredReviewers
-          },
-          restrictions: null
-        }
-      );
+      await this.client.octokit.rest.repos.updateBranchProtection({
+        owner: this.config.repository.owner,
+        repo: this.config.repository.name,
+        branch: branchName,
+        required_status_checks: {
+          strict: true,
+          contexts: requiredChecks
+        },
+        enforce_admins: false,
+        required_pull_request_reviews: {
+          dismissal_restrictions: {},
+          dismiss_stale_reviews: true,
+          require_code_owner_reviews: false,
+          required_approving_review_count: requiredReviewers
+        },
+        restrictions: null
+      });
       
       this.logger.success(`Branch protection enforced for ${branchName}`);
       return true;
