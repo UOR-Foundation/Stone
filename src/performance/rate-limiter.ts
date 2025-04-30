@@ -1,5 +1,6 @@
 import { LoggerService } from '../services/logger-service';
 import * as NodeJS from 'node:timers';
+import { trackRateLimiterMetric } from './metrics-server';
 
 /**
  * Rate limit configuration
@@ -103,6 +104,14 @@ export class RateLimiter {
       const retryAfter = Math.max(0, limit.resetTime - now);
       this.logger.debug(`Rate limit reached for ${key}, retry after ${retryAfter}ms`);
       
+      trackRateLimiterMetric('limit_reached', {
+        key,
+        used: limit.used,
+        max: limit.maxRequests,
+        retryAfter,
+        resetTime: limit.resetTime
+      });
+      
       return {
         success: false,
         remaining: 0,
@@ -113,6 +122,14 @@ export class RateLimiter {
     // Consume a token
     limit.used++;
     const remaining = limit.maxRequests - limit.used;
+    
+    trackRateLimiterMetric('token_acquired', {
+      key,
+      used: limit.used,
+      max: limit.maxRequests,
+      remaining,
+      resetTime: limit.resetTime
+    });
     
     this.logger.debug(`Token acquired for ${key}, ${remaining} remaining`);
     return {
@@ -244,6 +261,14 @@ export class RateLimiter {
     existingLimit.maxRequests = limit.limit;
     existingLimit.used = limit.limit - limit.remaining;
     existingLimit.resetTime = limit.resetTime;
+    
+    trackRateLimiterMetric('limit_updated', {
+      key,
+      used: existingLimit.used,
+      max: existingLimit.maxRequests,
+      remaining: limit.remaining,
+      resetTime: existingLimit.resetTime
+    });
     
     this.logger.debug(`Updated rate limit for ${key} from response headers: ${limit.remaining}/${limit.limit}`);
   }

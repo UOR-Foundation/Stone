@@ -13,7 +13,7 @@ export class SecretRedaction {
     this.patterns = [
       /(?:api[_-]?key|token|secret|password)[:=]\s*["']?([a-zA-Z0-9_\-]{20,})["']?/gi,
       
-      /gh[ps]_[a-zA-Z0-9_]{36,}/g,
+      /gh[ps]_[a-zA-Z0-9]{40,45}/g,
       
       /AKIA[0-9A-Z]{16}/g,
       
@@ -30,14 +30,51 @@ export class SecretRedaction {
     try {
       let redactedText = text;
       
+      const githubTokenRegex = /gh[ps]_[a-zA-Z0-9]{40,45}/g;
+      redactedText = redactedText.replace(githubTokenRegex, '***REDACTED***');
+      
+      const awsKeyRegex = /AKIA[0-9A-Z]{16}/g;
+      redactedText = redactedText.replace(awsKeyRegex, '***REDACTED***');
+      
+      const privateKeyRegex = /-----BEGIN (?:RSA|OPENSSH|DSA|EC) PRIVATE KEY-----[\s\S]*?-----END (?:RSA|OPENSSH|DSA|EC) PRIVATE KEY-----/g;
+      redactedText = redactedText.replace(privateKeyRegex, '***REDACTED***');
+      
       for (const pattern of this.patterns) {
-        redactedText = redactedText.replace(pattern, (match, group) => {
-          if (group) {
-            return match.replace(group, '***REDACTED***');
+        try {
+          if (pattern.toString().includes('gh[ps]_') || 
+              pattern.toString().includes('AKIA') || 
+              pattern.toString().includes('PRIVATE KEY')) {
+            continue;
           }
           
-          return '***REDACTED***';
-        });
+          pattern.lastIndex = 0;
+          
+          try {
+            if (pattern.test(redactedText)) {
+              pattern.lastIndex = 0;
+            } else {
+              continue;
+            }
+          } catch (testError) {
+            this.logger.error(`Error testing pattern ${pattern}: ${testError instanceof Error ? testError.message : String(testError)}`);
+            throw testError; // Re-throw to be caught by outer try/catch
+          }
+          
+          try {
+            redactedText = redactedText.replace(pattern, (match, group) => {
+              if (group) {
+                return match.replace(group, '***REDACTED***');
+              }
+              return '***REDACTED***';
+            });
+          } catch (replaceError) {
+            this.logger.error(`Error replacing with pattern ${pattern}: ${replaceError instanceof Error ? replaceError.message : String(replaceError)}`);
+            throw replaceError; // Re-throw to be caught by outer try/catch
+          }
+        } catch (patternError) {
+          this.logger.error(`Error with pattern ${pattern}: ${patternError instanceof Error ? patternError.message : String(patternError)}`);
+          throw patternError; // Re-throw to be caught by outer try/catch
+        }
       }
       
       this.logger.debug('Redacted potential secrets from text');
@@ -89,7 +126,28 @@ export class SecretRedaction {
    */
   public containsSecrets(text: string): boolean {
     try {
+      const githubTokenRegex = /gh[ps]_[a-zA-Z0-9]{40,45}/g;
+      if (githubTokenRegex.test(text)) {
+        return true;
+      }
+      
+      const awsKeyRegex = /AKIA[0-9A-Z]{16}/g;
+      if (awsKeyRegex.test(text)) {
+        return true;
+      }
+      
+      const privateKeyRegex = /-----BEGIN (?:RSA|OPENSSH|DSA|EC) PRIVATE KEY-----/g;
+      if (privateKeyRegex.test(text)) {
+        return true;
+      }
+      
       for (const pattern of this.patterns) {
+        if (pattern.toString().includes('gh[ps]_') || 
+            pattern.toString().includes('AKIA') || 
+            pattern.toString().includes('PRIVATE KEY')) {
+          continue;
+        }
+        
         if (pattern.test(text)) {
           pattern.lastIndex = 0;
           return true;

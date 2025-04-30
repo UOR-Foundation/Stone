@@ -3,6 +3,8 @@ name: Stone Software Factory
 on:
   issues:
     types: [labeled, unlabeled, edited]
+  pull_request:
+    types: [opened, synchronize, labeled]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -74,3 +76,36 @@ jobs:
         run: npx stone dashboard --update
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto_rebase:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'stone-feature')
+    needs: stone_process
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Run auto-rebase
+        run: pnpm stone auto-rebase --pr ${{ github.event.pull_request.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT with repo scope for pushing to branches
+          STONE_BOT_TOKEN: ${{ secrets.STONE_BOT_TOKEN }}

@@ -4,6 +4,7 @@ Stone is a structured system for orchestrating GitHub-based development using Cl
 
 [![Tests](https://github.com/uor-foundation/stone/actions/workflows/test.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/test.yml)
 [![PR Checks](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-brightgreen.svg)](https://github.com/uor-foundation/stone/actions/workflows/ci.yml)
 
 ## Features
 
@@ -11,6 +12,10 @@ Stone is a structured system for orchestrating GitHub-based development using Cl
 * **Structured Workflow**: Standardized workflow for feature development.
 * **GitHub Integration**: Seamless integration with GitHub issues, pull requests, and actions.
 * **Claude AI Integration**: Leverages Claude AI for each role's tasks.
+* **Security Features**: Role-based access control (RBAC) and automatic secret redaction.
+* **Performance Dashboard**: Real-time metrics visualization for rate limits and batch processing.
+* **Conflict Resolution**: Automatic PR rebasing to resolve merge conflicts.
+* **Multi-Repository Support**: Orchestrate Stone across multiple repositories.
 
 ## Installation
 
@@ -76,11 +81,39 @@ This will generate GitHub Actions workflows for Stone.
 npx stone dashboard
 ```
 
-This will start a web dashboard for Stone.
+This will start a web dashboard for Stone that displays performance metrics, rate limits, and issue status.
+
+### RBAC Management
+
+```bash
+# Check RBAC permissions for files
+npx stone rbac check --role developer --files src/index.ts
+
+# List available roles
+npx stone rbac list
+```
+
+### Auto-Rebase
+
+```bash
+# Auto-rebase a pull request
+npx stone auto-rebase --pr 123
+```
+
+### Multi-Repository Controller
+
+```bash
+# Start the multi-repository controller
+npx stone controller --config mono.stone.json
+```
 
 ## Documentation
 
-For detailed documentation, see [stone-spec.md](stone-spec.md) and [docs/implementation-plan.md](docs/implementation-plan.md).
+For detailed documentation, see:
+- [stone-spec.md](stone-spec.md) - Core specification
+- [docs/implementation-plan.md](docs/implementation-plan.md) - Implementation details
+- [docs/dashboard.md](docs/dashboard.md) - Dashboard documentation
+- [CHANGELOG.md](CHANGELOG.md) - Version history and changes
 
 ## Contributing
 

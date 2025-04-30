@@ -28,10 +28,12 @@ Get a high-level overview of Stone across all connected repositories:
 
 Track performance metrics to optimize your development process:
 
+- **API Rate Limits**: Monitor GitHub API rate limit usage and remaining quota
+- **Batch Processing**: Track batch queue size and processing throughput
+- **System Resources**: Monitor CPU, memory, and network usage
+- **Response Times**: Track API response times and identify slow operations
 - **Cycle Time**: Time from issue creation to completion
 - **Role Performance**: Time spent by each role on tasks
-- **Bottleneck Identification**: Identify stages where issues get stuck
-- **Throughput Rate**: Track issue completion over time
 
 ### User Management
 
@@ -81,9 +83,22 @@ Configuration options:
 The Stone Dashboard is built as a static site hosted on GitHub Pages, using:
 
 - React for the user interface
+- Vite for building and bundling
 - GitHub API for data retrieval
 - Chart.js for data visualization
 - GitHub authentication for access control
+- WebSocket for real-time updates
+
+### Metrics API
+
+The dashboard includes a metrics API that provides:
+
+- Current rate limit status: `/api/metrics/rate-limits`
+- Batch processing stats: `/api/metrics/batch`
+- System resource usage: `/api/metrics/resources`
+- Historical metrics data: `/api/metrics/history`
+
+All metrics endpoints return JSON data that can be consumed by other applications.
 
 ## Self-Hosting
 
