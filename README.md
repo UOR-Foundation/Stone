@@ -6,6 +6,8 @@ Stone is a structured system for orchestrating GitHub-based development using Cl
 [![PR Checks](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/uor-foundation/stone/actions/workflows/pr-checks.yml)
 [![Coverage](https://img.shields.io/badge/coverage-80%25-brightgreen.svg)](https://github.com/uor-foundation/stone/actions/workflows/ci.yml)
 
+![Stone Quick Start](https://github.com/UOR-Foundation/Stone/assets/quick-start.gif)
+
 ## Features
 
 * **Role-Based Development**: Specialized roles (PM, QA, Feature Developer, Auditor, GitHub Actions Runner) with defined responsibilities.
