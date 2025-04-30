@@ -98,7 +98,7 @@ export class AuditorRole extends Role {
           prompt += lastFeatureComment.body.replace('## FEATURE Role Response\n\n', '');
         }
       } catch (error) {
-        this.logger.warning(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     

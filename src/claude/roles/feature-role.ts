@@ -73,7 +73,7 @@ export class FeatureRole extends Role {
           prompt += lastQAComment.body.replace('## QA Role Response\n\n', '');
         }
       } catch (error) {
-        this.logger.warning(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(`Error fetching comments for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     

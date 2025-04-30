@@ -53,6 +53,8 @@ The main dashboard showing the current status across all repositories:
 - Recent activity
 - Performance summary
 
+![Dashboard Overview](https://github.com/UOR-Foundation/Stone/assets/dashboard-overview.png)
+
 ### Repository View
 
 Detailed view of a specific repository:
@@ -61,6 +63,8 @@ Detailed view of a specific repository:
 - Issue details and history
 - Repository-specific performance metrics
 
+![Repository View](https://github.com/UOR-Foundation/Stone/assets/repository-view.png)
+
 ### Analytics
 
 In-depth performance analysis:
@@ -68,6 +72,8 @@ In-depth performance analysis:
 - Graphical representations of performance metrics
 - Trend analysis over time
 - Export capabilities for reporting
+
+![Analytics Dashboard](https://github.com/UOR-Foundation/Stone/assets/analytics-dashboard.png)
 
 ### Settings
 
@@ -99,6 +105,8 @@ The dashboard includes a metrics API that provides:
 - Historical metrics data: `/api/metrics/history`
 
 All metrics endpoints return JSON data that can be consumed by other applications.
+
+![Metrics API Response](https://github.com/UOR-Foundation/Stone/assets/metrics-api.png)
 
 ## Self-Hosting
 

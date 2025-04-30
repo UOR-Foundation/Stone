@@ -1,43 +1,20 @@
 import { RateLimiter } from './rate-limiter';
 import { RequestBatcher } from './request-batcher';
 import { LoggerService } from '../services/logger-service';
+import { trackRateLimiterMetric, trackBatcherMetric, getRateLimiterMetrics, getBatcherMetrics } from './metrics-tracker';
+import express from 'express';
+import cors from 'cors';
+import http from 'http';
 import os from 'os';
 
-let rateLimiterMetrics: any[] = [];
-let batcherMetrics: any[] = [];
 let systemMetrics: any[] = [];
 
 const logger = new LoggerService();
+const rateLimiter = new RateLimiter(logger);
+const batcher = new RequestBatcher(async () => ({}), logger);
 
-/**
- * Track rate limiter metrics
- */
-export function trackRateLimiterMetric(name: string, data: any): void {
-  rateLimiterMetrics.push({
-    timestamp: Date.now(),
-    name,
-    ...data
-  });
-  
-  if (rateLimiterMetrics.length > 100) {
-    rateLimiterMetrics = rateLimiterMetrics.slice(-100);
-  }
-}
+let server: http.Server | null = null;
 
-/**
- * Track request batcher metrics
- */
-export function trackBatcherMetric(name: string, data: any): void {
-  batcherMetrics.push({
-    timestamp: Date.now(),
-    name,
-    ...data
-  });
-  
-  if (batcherMetrics.length > 100) {
-    batcherMetrics = batcherMetrics.slice(-100);
-  }
-}
 
 /**
  * Get system metrics
@@ -94,56 +71,54 @@ export function stopMetricsTracking(): void {
 }
 
 /**
- * Get all metrics
+ * Get metrics in the required format
  */
 export async function getMetrics(): Promise<any> {
-  if (systemMetrics.length === 0) {
-    systemMetrics.push(getSystemMetrics());
-  }
-  
-  const currentMetrics = {
-    rate: {
-      used: 0,
-      limit: 0,
-      remaining: 0
-    },
-    batch: {
-      queued: 0,
-      max: 0,
-      processing: false
-    }
-  };
-  
-  try {
-    currentMetrics.rate.used = 42;
-    currentMetrics.rate.limit = 100;
-    currentMetrics.rate.remaining = 58;
-    
-    currentMetrics.batch.queued = 5;
-    currentMetrics.batch.max = 25;
-  } catch (error) {
-    logger.error(`Error getting current metrics: ${error instanceof Error ? error.message : String(error)}`);
-  }
+  // Get rate limiter metrics
+  const rateLimits = rateLimiter.getLimits();
+  const rateUsed = Object.values(rateLimits).reduce((total, limit) => total + limit.used, 0);
+  const rateLimit = Object.values(rateLimits).reduce((total, limit) => total + limit.maxRequests, 0);
   
   return {
-    timestamp: Date.now(),
-    current: currentMetrics,
-    history: {
-      rateLimiter: rateLimiterMetrics,
-      batcher: batcherMetrics,
-      system: systemMetrics
+    rate: {
+      used: rateUsed,
+      limit: rateLimit
     },
-    version: process.env.npm_package_version || '0.1.0'
+    batch: {
+      queued: batcher.getQueueSize(),
+      max: 25 // Default max batch size
+    },
+    timestamp: Date.now()
   };
 }
 
 /**
  * Start the metrics server
  */
-export function startMetricsServer(port: number = 3001): void {
+export function startMetricsServer(port: number = 9000): void {
   startMetricsTracking();
   
-  logger.info(`Metrics server started on port ${port}`);
+  const app = express();
+  
+  app.use(cors());
+  
+  app.get('/api/metrics', async (req, res) => {
+    try {
+      const metrics = await getMetrics();
+      res.json(metrics);
+    } catch (error) {
+      logger.error(`Error serving metrics: ${error instanceof Error ? error.message : String(error)}`);
+      return res.status(500).json({ error: 'Failed to retrieve metrics' });
+    }
+  });
+  
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+  });
+  
+  server = app.listen(port, () => {
+    logger.info(`Metrics server started on port ${port}`);
+  });
 }
 
 /**
@@ -152,5 +127,9 @@ export function startMetricsServer(port: number = 3001): void {
 export function stopMetricsServer(): void {
   stopMetricsTracking();
   
-  logger.info('Metrics server stopped');
+  if (server) {
+    server.close();
+    server = null;
+    logger.info('Metrics server stopped');
+  }
 }

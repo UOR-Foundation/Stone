@@ -80,7 +80,7 @@ export class ActionsRole extends Role {
                     prompt += '\n```yaml\n' + content + '\n```\n';
                   }
                 } catch (error) {
-                  this.logger.warning(`Error fetching workflow file ${file.name}: ${error instanceof Error ? error.message : String(error)}`);
+                  this.logger.warn(`Error fetching workflow file ${file.name}: ${error instanceof Error ? error.message : String(error)}`);
                 }
               }
             }
@@ -89,7 +89,7 @@ export class ActionsRole extends Role {
           prompt += '\n\nNo existing workflow files found. You will need to create them from scratch.';
         }
       } catch (error) {
-        this.logger.warning(`Error fetching data for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(`Error fetching data for issue #${context.issue.number}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     

@@ -7,7 +7,45 @@ on:
     branches: [ main ]
 
 jobs:
+  ci-lite:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      (github.event.pull_request.base.ref == 'main') &&
+      (
+        contains(github.event.pull_request.files.*.path, 'docs/') ||
+        contains(github.event.pull_request.files.*.path, 'src/dashboard/') ||
+        contains(github.event.pull_request.files.*.path, '.md')
+      )
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'pnpm'
+        
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        run_install: false
+        
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Lint
+      run: pnpm lint
+      
+    - name: Test dashboard
+      run: pnpm build:dashboard
+  
   build:
+    needs: ci-lite
+    if: >
+      always() &&
+      (needs.ci-lite.result == 'skipped' || needs.ci-lite.result == 'success')
     strategy:
       matrix:
         node-version: [18.x, 20.x]
@@ -44,6 +82,9 @@ jobs:
           
     - name: Install dependencies
       run: pnpm install
+      
+    - name: RBAC Check
+      run: pnpm stone rbac:check --diff origin/main...HEAD
       
     - name: Build
       run: pnpm build
