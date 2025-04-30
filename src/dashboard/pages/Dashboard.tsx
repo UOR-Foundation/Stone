@@ -17,6 +17,7 @@ export interface Metrics {
 
 export const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [metricsHistory, setMetricsHistory] = useState<Metrics[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,14 +25,19 @@ export const Dashboard: React.FC = () => {
     const fetchMetrics = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/metrics');
+        const port = process.env.STONE_METRICS_PORT || '9000';
+        const response = await fetch(`http://localhost:${port}/api/metrics`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch metrics: ${response.statusText}`);
         }
         
-        const data = await response.json();
+        const data = await response.json() as Metrics;
         setMetrics(data);
+        setMetricsHistory(prev => {
+          const newHistory = [...prev, data];
+          return newHistory.length > 20 ? newHistory.slice(-20) : newHistory;
+        });
         setError(null);
       } catch (err) {
         setError(`Error fetching metrics: ${err instanceof Error ? err.message : String(err)}`);
@@ -86,7 +92,7 @@ export const Dashboard: React.FC = () => {
               </div>
               
               <div className="chart-container">
-                <MetricsChart metrics={[metrics]} />
+                <MetricsChart metrics={metricsHistory.length > 0 ? metricsHistory : [metrics]} />
               </div>
             </div>
             
