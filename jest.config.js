@@ -32,8 +32,16 @@ module.exports = {
     'octokit': '<rootDir>/test/mocks/octokit.js',
     'chalk': '<rootDir>/test/mocks/chalk.js',
     '\\.(css|less|scss|sass)$': '<rootDir>/test/mocks/style-mock.js',
+    // Add mocks for testing frameworks
+    'chai': '<rootDir>/test/mocks/chai.js',
+    'mocha': '<rootDir>/test/mocks/mocha.js',
+    'sinon': '<rootDir>/test/mocks/sinon.js',
+    'sinon-chai': '<rootDir>/test/mocks/sinon-chai.js'
   },
   // Setup Jest test environment
   setupFilesAfterEnv: ['<rootDir>/test/setup.js'],
   ...(process.env.CI && { maxWorkers: '50%' }),
+  fakeTimers: {
+    enableGlobally: true
+  }
 };
