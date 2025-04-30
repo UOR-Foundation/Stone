@@ -32,6 +32,8 @@ export class FeatureRole extends Role {
     prompt += '\n3. Ensure all tests pass with your implementation';
     prompt += '\n4. Provide implementation code with file paths';
     prompt += '\n5. Explain any technical decisions you made';
+    prompt += '\n6. Follow best practices and coding standards';
+    prompt += '\n7. Consider edge cases and error handling';
     
     // Find Gherkin and test info in issue comments
     if (context.issue && context.repository) {

@@ -1,11 +1,10 @@
-const { ClaudeClient } = require('../../../../src/claude/api/client');
-const fetch = require('node-fetch');
+import { ClaudeClient } from '../../../../src/claude/api/client';
 
 jest.mock('node-fetch');
+const mockFetch = jest.requireMock('node-fetch');
 
 describe('ClaudeClient', () => {
-  const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
-  let client: ClaudeClient;
+  let client: typeof ClaudeClient.prototype;
   
   beforeEach(() => {
     jest.resetAllMocks();

@@ -1,4 +1,4 @@
-import { configSchema } from '../../../src/config/schema';
+import { configSchema, validateConfigNoDefaults } from '../../../src/config/schema';
 
 describe('Configuration Schema', () => {
   test('validates a complete configuration object', () => {
@@ -56,7 +56,7 @@ describe('Configuration Schema', () => {
       },
     };
 
-    const { error, value } = configSchema.validate(config);
+    const { error, value } = validateConfigNoDefaults(config);
     expect(error).toBeUndefined();
     expect(value).toEqual(config);
   });
@@ -78,7 +78,9 @@ describe('Configuration Schema', () => {
 
     const { error, value } = configSchema.validate(minimalConfig);
     expect(error).toBeUndefined();
-    expect(value.repository).toEqual(minimalConfig.repository);
+    expect(value.repository.owner).toEqual(minimalConfig.repository.owner);
+    expect(value.repository.name).toEqual(minimalConfig.repository.name);
+    expect(value.repository.defaultBranch).toBe('main');
     expect(value.packages).toEqual(minimalConfig.packages);
     
     // Check that defaults were applied

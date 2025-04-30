@@ -26,11 +26,12 @@ export class PMRole extends Role {
     let prompt = await super.generatePrompt(context);
     
     prompt += '\n\nAs the Product Manager (PM) role, you need to:';
-    prompt += '\n1. Create a Gherkin specification based on the issue description';
+    prompt += '\n1. Create a detailed Gherkin specification based on the issue description';
     prompt += '\n2. Format the Gherkin specification in a code block starting with ```gherkin';
     prompt += '\n3. Include User stories (As a... I want... So that...)';
     prompt += '\n4. Define specific scenarios with Given/When/Then format';
-    prompt += '\n5. Ensure all requirements from the issue are covered';
+    prompt += '\n5. Include acceptance criteria for each scenario';
+    prompt += '\n6. Ensure all requirements from the issue are covered';
     
     return prompt;
   }

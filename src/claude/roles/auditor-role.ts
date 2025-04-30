@@ -45,8 +45,9 @@ export class AuditorRole extends Role {
     prompt += '\n2. Check for placeholder code, TODOs, or incomplete implementations';
     prompt += '\n3. Validate test coverage adequacy';
     prompt += '\n4. Ensure code quality standards are met';
-    prompt += '\n5. Provide a clear audit result (PASS or FAIL)';
-    prompt += '\n6. List specific issues if the audit fails';
+    prompt += '\n5. Check for security vulnerabilities or performance issues';
+    prompt += '\n6. Provide a clear audit result (PASS or FAIL)';
+    prompt += '\n7. List specific issues if the audit fails';
     
     // Find Gherkin, test info, and implementation in issue comments
     if (context.issue && context.repository) {

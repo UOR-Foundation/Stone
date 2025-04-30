@@ -1,4 +1,5 @@
 import { LoggerService } from '../services/logger-service';
+import * as NodeJS from 'node:timers';
 
 /**
  * Rate limit configuration

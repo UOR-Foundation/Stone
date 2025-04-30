@@ -1,5 +1,7 @@
 import { LoggerService } from '../services/logger-service';
 
+type Timeout = ReturnType<typeof setTimeout>;
+
 /**
  * A request to be batched
  */
@@ -29,7 +31,7 @@ export type BatchProcessor<T, R> = (requests: BatchRequest<T, R>[]) => Promise<R
  */
 export class RequestBatcher<T, R> {
   private queue: BatchRequest<T, R>[] = [];
-  private timer: NodeJS.Timeout | null = null;
+  private timer: Timeout | null = null;
   private processing = false;
   private config: BatcherConfig;
 
