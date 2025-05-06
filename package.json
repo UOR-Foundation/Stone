@@ -26,7 +26,8 @@
     "prepublishOnly": "pnpm run build",
     "start": "node dist/cli/index.js",
     "start:dashboard": "vite dev src/dashboard --port 3000",
-    "metrics": "node dist/performance/metrics-server.js"
+    "metrics": "node dist/performance/metrics-server.js",
+    "validate-schemas": "ts-node scripts/validate-schemas.ts"
   },
   "keywords": [
     "github",
