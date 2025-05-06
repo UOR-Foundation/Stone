@@ -7,6 +7,7 @@ import { ExternalToolIntegration } from '../integration/external-tool';
 import { ExtensionAPI } from '../integration/api';
 import { NotificationSystem } from '../integration/notification';
 import { DataExchangeManager } from '../integration/data-exchange';
+import { initializeTools } from '../tools/init-tools';
 
 /**
  * Central manager for all extension systems
@@ -131,6 +132,9 @@ export class ExtensionManager {
     
     // Integrate custom roles with role manager
     this.customRoleRegistry.integrateWithRoleManager();
+    
+    // Initialize custom tools
+    initializeTools(this.externalToolIntegration);
   }
 }
 
